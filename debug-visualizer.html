@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell Sort Visualizer - Fixed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1E1E1E;
+            color: #CCCCCC;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        /* Visualizer Section */
+        #visualizer {
+            background-color: #252526;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            background-color: #2D2D2D;
+            padding: 1.5rem;
+            border-radius: 5px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 500;
+            color: #CCCCCC;
+            min-width: 80px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            background-color: #1E1E1E;
+            color: #CCCCCC;
+            border: 1px solid #007ACC;
+            padding: 0.7rem;
+            border-radius: 3px;
+            font-size: 1rem;
+            font-family: Consolas, 'Courier New', monospace;
+        }
+
+        input[type="text"] {
+            min-width: 300px;
+        }
+
+        button {
+            background-color: #0E639C;
+            color: #FFFFFF;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            margin: 0.3rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        button:hover {
+            background-color: #1177BB;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 119, 187, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Canvas Container - FIXED */
+        #canvas-container {
+            background-color: #1E1E1E;
+            border: 2px solid #007ACC;
+            border-radius: 5px;
+            padding: 2rem;
+            min-height: 400px;
+            position: relative;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #bars-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 350px;
+            width: 100%;
+            gap: 3px;
+            position: relative;
+        }
+
+        /* Bars Styling */
+        .bar {
+            background: linear-gradient(180deg, #007ACC, #005A9E);
+            transition: all 0.3s ease;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 0.85rem;
+            padding-bottom: 8px;
+            box-shadow: 0 2px 8px rgba(0, 122, 204, 0.5);
+            min-width: 30px;
+        }
+
+        .bar.comparing {
+            background: linear-gradient(180deg, #FFD700, #FFA500);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        .bar.swapping {
+            background: linear-gradient(180deg, #FF4444, #CC0000);
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.8);
+            transform: scale(1.05);
+        }
+
+        .bar.sorted {
+            background: linear-gradient(180deg, #4EC9B0, #2A9D8F);
+            box-shadow: 0 0 20px rgba(78, 201, 176, 0.6);
+        }
+
+        /* Stats */
+        #stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-box {
+            background-color: #1E1E1E;
+            padding: 1.2rem;
+            border-radius: 5px;
+            border: 1px solid #007ACC;
+            text-align: center;
+        }
+
+        .stat-box label {
+            display: block;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-box span {
+            display: block;
+            color: #007ACC;
+            font-size: 2rem;
+            font-weight: bold;
+            font-family: Consolas, 'Courier New', monospace;
+        }
+
+        /* Empty State */
+        .empty-state {
+            color: #666;
+            font-size: 1.2rem;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            input[type="text"] {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐚 Shell Sort Visualizer - Debug Version</h1>
+
+        <section id="visualizer">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="arrayInput">Mảng đầu vào:</label>
+                    <input type="text" id="arrayInput" value="64, 34, 25, 12, 22, 11, 90">
+                </div>
+
+                <button onclick="visualizer.setArray()">📥 Đặt Mảng</button>
+                <button onclick="visualizer.randomArray()">🎲 Ngẫu Nhiên</button>
+
+                <div class="control-group">
+                    <label for="gapSequence">Gap Sequence:</label>
+                    <select id="gapSequence">
+                        <option value="shell">Shell (N/2)</option>
+                        <option value="hibbard">Hibbard (2^k - 1)</option>
+                        <option value="knuth" selected>Knuth ((3^k - 1)/2)</option>
+                        <option value="ciura">Ciura</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="speed">Tốc độ:</label>
+                    <select id="speed">
+                        <option value="2000">0.5x (Rất chậm)</option>
+                        <option value="1000" selected>1x (Bình thường)</option>
+                        <option value="500">2x (Nhanh)</option>
+                        <option value="250">4x (Rất nhanh)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="controls" style="background-color: #1E1E1E;">
+                <button onclick="visualizer.play()">▶️ Play</button>
+                <button onclick="visualizer.pause()">⏸️ Pause</button>
+                <button onclick="visualizer.stepForward()">⏭️ Step Forward</button>
+                <button onclick="visualizer.stepBackward()">⏮️ Step Back</button>
+                <button onclick="visualizer.reset()">🔄 Reset</button>
+            </div>
+
+            <div id="canvas-container">
+                <div id="bars-container">
+                    <div class="empty-state">Nhấn "Đặt Mảng" để bắt đầu</div>
+                </div>
+            </div>
+
+            <div id="stats">
+                <div class="stat-box">
+                    <label>Comparisons</label>
+                    <span id="comparisons">0</span>
+                </div>
+                <div class="stat-box">
+                    <label>Swaps</label>
+                    <span id="swaps">0</span>
+                </div>
+                <div class="stat-box">
+                    <label>Current Gap</label>
+                    <span id="currentGap">0</span>
+                </div>
+                <div class="stat-box">
+                    <label>Time (ms)</label>
+                    <span id="time">0</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Shell Sort Visualizer - Enhanced with Debug
+        class ShellSortVisualizer {
+            constructor() {
+                this.array = [];
+                this.history = [];
+                this.currentStep = 0;
+                this.isPlaying = false;
+                this.timer = null;
+                this.stats = {
+                    comparisons: 0,
+                    swaps: 0,
+                    currentGap: 0,
+                    time: 0
+                };
+                this.startTime = 0;
+                console.log('Visualizer initialized');
+            }
+
+            generateGapSequence(n, type) {
+                const gaps = [];
+
+                switch(type) {
+                    case 'shell':
+                        for (let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)) {
+                            gaps.push(gap);
+                        }
+                        break;
+
+                    case 'hibbard':
+                        let k = 1;
+                        while (Math.pow(2, k) - 1 < n) {
+                            gaps.unshift(Math.pow(2, k) - 1);
+                            k++;
+                        }
+                        break;
+
+                    case 'knuth':
+                        k = 1;
+                        while ((Math.pow(3, k) - 1) / 2 < n) {
+                            gaps.unshift(Math.floor((Math.pow(3, k) - 1) / 2));
+                            k++;
+                        }
+                        break;
+
+                    case 'ciura':
+                        const ciuraSeq = [1, 4, 10, 23, 57, 132, 301, 701, 1750];
+                        for (let i = ciuraSeq.length - 1; i >= 0; i--) {
+                            if (ciuraSeq[i] < n) {
+                                gaps.push(ciuraSeq[i]);
+                            }
+                        }
+                        if (gaps.length === 0 || gaps[gaps.length - 1] !== 1) {
+                            gaps.push(1);
+                        }
+                        break;
+                }
+
+                console.log('Generated gaps:', gaps);
+                return gaps;
+            }
+
+            generateHistory() {
+                console.log('Generating history for array:', this.array);
+                this.history = [];
+                this.stats = {
+                    comparisons: 0,
+                    swaps: 0,
+                    currentGap: 0,
+                    time: 0
+                };
+
+                const arr = [...this.array];
+                const n = arr.length;
+                const gapType = document.getElementById('gapSequence').value;
+                const gaps = this.generateGapSequence(n, gapType);
+
+                this.history.push({
+                    array: [...arr],
+                    comparing: [],
+                    swapping: [],
+                    sorted: [],
+                    stats: { ...this.stats },
+                    description: 'Bắt đầu Shell Sort'
+                });
+
+                for (let gap of gaps) {
+                    this.stats.currentGap = gap;
+
+                    this.history.push({
+                        array: [...arr],
+                        comparing: [],
+                        swapping: [],
+                        sorted: [],
+                        stats: { ...this.stats },
+                        description: `Gap hiện tại: ${gap}`
+                    });
+
+                    for (let i = gap; i < n; i++) {
+                        const temp = arr[i];
+                        let j = i;
+
+                        this.history.push({
+                            array: [...arr],
+                            comparing: [i],
+                            swapping: [],
+                            sorted: [],
+                            stats: { ...this.stats },
+                            description: `Lưu temp = ${temp} tại vị trí ${i}`
+                        });
+
+                        while (j >= gap && arr[j - gap] > temp) {
+                            this.stats.comparisons++;
+
+                            this.history.push({
+                                array: [...arr],
+                                comparing: [j, j - gap],
+                                swapping: [],
+                                sorted: [],
+                                stats: { ...this.stats },
+                                description: `So sánh arr[${j - gap}]=${arr[j - gap]} với temp=${temp}`
+                            });
+
+                            arr[j] = arr[j - gap];
+                            this.stats.swaps++;
+
+                            this.history.push({
+                                array: [...arr],
+                                comparing: [],
+                                swapping: [j, j - gap],
+                                sorted: [],
+                                stats: { ...this.stats },
+                                description: `Dịch ${arr[j]} từ vị trí ${j - gap} sang ${j}`
+                            });
+
+                            j -= gap;
+                        }
+
+                        if (j >= gap) {
+                            this.stats.comparisons++;
+                            this.history.push({
+                                array: [...arr],
+                                comparing: [j, j - gap],
+                                swapping: [],
+                                sorted: [],
+                                stats: { ...this.stats },
+                                description: `So sánh arr[${j - gap}]=${arr[j - gap]} với temp=${temp} (không hoán đổi)`
+                            });
+                        }
+
+                        arr[j] = temp;
+
+                        this.history.push({
+                            array: [...arr],
+                            comparing: [],
+                            swapping: [j],
+                            sorted: [],
+                            stats: { ...this.stats },
+                            description: `Đặt temp=${temp} vào vị trí ${j}`
+                        });
+                    }
+                }
+
+                this.history.push({
+                    array: [...arr],
+                    comparing: [],
+                    swapping: [],
+                    sorted: Array.from({ length: n }, (_, i) => i),
+                    stats: { ...this.stats },
+                    description: 'Hoàn thành sắp xếp!'
+                });
+
+                this.currentStep = 0;
+                console.log('History generated:', this.history.length, 'steps');
+            }
+
+            setArray() {
+                try {
+                    const input = document.getElementById('arrayInput').value;
+                    this.array = input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+
+                    if (this.array.length === 0) {
+                        alert('Vui lòng nhập mảng hợp lệ!');
+                        return;
+                    }
+
+                    console.log('Array set:', this.array);
+                    this.reset();
+                    this.renderBars();
+                } catch (error) {
+                    console.error('Error setting array:', error);
+                    alert('Lỗi: ' + error.message);
+                }
+            }
+
+            randomArray() {
+                const size = 12;
+                this.array = Array.from({ length: size }, () => Math.floor(Math.random() * 90) + 10);
+                document.getElementById('arrayInput').value = this.array.join(', ');
+                console.log('Random array generated:', this.array);
+                this.reset();
+                this.renderBars();
+            }
+
+            renderBars() {
+                console.log('Rendering bars for array:', this.array);
+                const container = document.getElementById('bars-container');
+                container.innerHTML = '';
+
+                if (this.array.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Mảng rỗng</div>';
+                    return;
+                }
+
+                const maxVal = Math.max(...this.array);
+                const containerWidth = container.offsetWidth;
+                const barWidth = Math.min(60, (containerWidth - this.array.length * 3) / this.array.length);
+
+                console.log('Container width:', containerWidth, 'Bar width:', barWidth);
+
+                this.array.forEach((val, idx) => {
+                    const bar = document.createElement('div');
+                    bar.className = 'bar';
+                    bar.style.width = barWidth + 'px';
+                    bar.style.height = Math.max(30, (val / maxVal * 300)) + 'px';
+                    bar.textContent = val;
+                    bar.id = 'bar-' + idx;
+                    container.appendChild(bar);
+                });
+
+                console.log('Bars rendered:', this.array.length);
+            }
+
+            updateVisualization() {
+                if (this.history.length === 0) return;
+
+                const step = this.history[this.currentStep];
+                const container = document.getElementById('bars-container');
+                const maxVal = Math.max(...step.array);
+
+                step.array.forEach((val, idx) => {
+                    const bar = document.getElementById('bar-' + idx);
+                    if (bar) {
+                        bar.style.height = Math.max(30, (val / maxVal * 300)) + 'px';
+                        bar.textContent = val;
+
+                        bar.className = 'bar';
+
+                        if (step.comparing.includes(idx)) {
+                            bar.classList.add('comparing');
+                        } else if (step.swapping.includes(idx)) {
+                            bar.classList.add('swapping');
+                        } else if (step.sorted.includes(idx)) {
+                            bar.classList.add('sorted');
+                        }
+                    }
+                });
+
+                document.getElementById('comparisons').textContent = step.stats.comparisons;
+                document.getElementById('swaps').textContent = step.stats.swaps;
+                document.getElementById('currentGap').textContent = step.stats.currentGap;
+
+                if (this.isPlaying) {
+                    const elapsed = Date.now() - this.startTime;
+                    document.getElementById('time').textContent = elapsed;
+                }
+            }
+
+            play() {
+                if (this.array.length === 0) {
+                    alert('Vui lòng đặt mảng trước!');
+                    return;
+                }
+
+                if (this.history.length === 0) {
+                    this.generateHistory();
+                }
+
+                if (this.currentStep >= this.history.length - 1) {
+                    this.currentStep = 0;
+                }
+
+                this.isPlaying = true;
+                this.startTime = Date.now();
+
+                const speed = parseInt(document.getElementById('speed').value) || 1000;
+
+                const animate = () => {
+                    if (!this.isPlaying) return;
+
+                    if (this.currentStep < this.history.length - 1) {
+                        this.currentStep++;
+                        this.updateVisualization();
+                        this.timer = setTimeout(animate, speed);
+                    } else {
+                        this.isPlaying = false;
+                        this.updateVisualization();
+                        console.log('Animation completed');
+                    }
+                };
+
+                this.updateVisualization();
+                this.timer = setTimeout(animate, speed);
+                console.log('Animation started');
+            }
+
+            pause() {
+                this.isPlaying = false;
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+                console.log('Animation paused at step', this.currentStep);
+            }
+
+            stepForward() {
+                this.pause();
+
+                if (this.history.length === 0) {
+                    this.generateHistory();
+                }
+
+                if (this.currentStep < this.history.length - 1) {
+                    this.currentStep++;
+                    this.updateVisualization();
+                    console.log('Step forward to', this.currentStep);
+                }
+            }
+
+            stepBackward() {
+                this.pause();
+
+                if (this.currentStep > 0) {
+                    this.currentStep--;
+                    this.updateVisualization();
+                    console.log('Step backward to', this.currentStep);
+                }
+            }
+
+            reset() {
+                this.pause();
+                this.history = [];
+                this.currentStep = 0;
+                this.stats = {
+                    comparisons: 0,
+                    swaps: 0,
+                    currentGap: 0,
+                    time: 0
+                };
+
+                document.getElementById('comparisons').textContent = '0';
+                document.getElementById('swaps').textContent = '0';
+                document.getElementById('currentGap').textContent = '0';
+                document.getElementById('time').textContent = '0';
+
+                this.renderBars();
+                console.log('Visualizer reset');
+            }
+        }
+
+        // Initialize visualizer
+        const visualizer = new ShellSortVisualizer();
+
+        // Auto-load initial array
+        window.addEventListener('load', () => {
+            console.log('Page loaded, setting initial array');
+            visualizer.setArray();
+        });
+
+        // Debug helper
+        window.visualizer = visualizer;
+        console.log('Visualizer ready! Type "visualizer" in console to debug.');
+    </script>
+</body>
+</html>
