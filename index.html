@@ -1648,11 +1648,9 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
         function parseArray() {
             const input = arrayInput.value.trim();
             array = input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
-
             if (array.length === 0) {
                 array = [64, 34, 25, 12, 22, 11, 90];
             }
-
             originalArray = [...array];
             resetCounters();
         }
@@ -1816,12 +1814,10 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
         function generateShellGaps(n) {
             const gaps = [];
             let gap = Math.floor(n / 2);
-
             while (gap > 0) {
                 gaps.push(gap);
                 gap = Math.floor(gap / 2);
             }
-
             return gaps;
         }
 
@@ -1830,52 +1826,34 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             const gaps = [];
             let k = 1;
             let gap = Math.pow(2, k) - 1;
-
-            // Generate all gaps up to n
-            while (gap < n) {
+            while (gap < n) { // Generate all gaps up to n
                 gaps.push(gap);
                 k++;
                 gap = Math.pow(2, k) - 1;
             }
-
-            // Reverse to start with largest gap
-            return gaps.reverse();
+            return gaps.reverse(); // Reverse to start with largest gap
         }
 
         // Knuth: (3^k - 1)/2 (1, 4, 13, 40, 121, ...)
         function generateKnuthGaps(n) {
             const gaps = [];
             let gap = 1;
-
-            while (gap < n / 3) {
-                gap = gap * 3 + 1;
-            }
-
+            while (gap < n / 3) gap = gap * 3 + 1;
             while (gap > 0) {
                 gaps.push(gap);
                 gap = Math.floor((gap - 1) / 3);
             }
-
             return gaps;
         }
 
         // Ciura: Empirically optimal sequence
         function generateCiuraGaps(n) {
             const ciuraSequence = [1, 4, 10, 23, 57, 132, 301, 701, 1750, 3937, 8858, 19930, 44842, 100894, 227011, 510774, 1149241, 2585792, 5818032, 13090572, 29453787, 66271020, 149109795, 335497038, 754868335, 1698453253];
-
-            // Find gaps that are less than n
             const gaps = [];
             for (let i = ciuraSequence.length - 1; i >= 0; i--) {
-                if (ciuraSequence[i] < n) {
-                    gaps.push(ciuraSequence[i]);
-                }
+                if (ciuraSequence[i] < n) gaps.push(ciuraSequence[i]);
             }
-
-            // If no suitable gap found, start with largest available
-            if (gaps.length === 0) {
-                gaps.push(1);
-            }
-
+            if (gaps.length === 0) gaps.push(1);
             return gaps;
         }
 
@@ -2579,5 +2557,6 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
         })();
     </script>
 </body>
+
 
 </html>
