@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell Sort - Thuật Toán Sắp Xếp Hiệu Quả</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* ============================================
+           GLOBAL STYLES
+        ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            min-height: 100vh;
+            color: #cccccc;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 3D Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(37, 37, 38, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #007ACC;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #CCCCCC;
+            font-weight: 600;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+        }
+
+        nav a:hover {
+            color: #007ACC;
+            background-color: #2d2d2d;
+        }
+
+        /* Sections */
+        section {
+            background: rgba(45, 45, 45, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            margin: 2rem 0;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            color: #FFFFFF;
+            font-size: 2rem;
+            margin: 2rem 0 1rem 0;
+            border-bottom: 2px solid #4ec9b0;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #FFFFFF;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        p {
+            color: #EEEEEE;
+            margin: 1rem 0;
+            line-height: 1.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            animation: fadeInUp 1s;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #0e639c;
+            color: #FFFFFF;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0.3rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover {
+            background: #1177bb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 119, 187, 0.5);
+        }
+
+        /* Lists */
+        ul,
+        ol {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: #EEEEEE;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(37, 37, 38, 0.8);
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        td {
+            color: #cccccc;
+        }
+
+        tr:hover {
+            background: rgba(45, 45, 45, 0.8);
+        }
+
+        /* VISUALIZER SPECIFIC STYLES */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 500px;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .visualization-section {
+            background: rgba(37, 37, 38, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pseudocode-section {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            max-height: 700px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pseudocode-header {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4ec9b0;
+            border-bottom: 2px solid #4ec9b0;
+            padding-bottom: 10px;
+        }
+
+        #pseudocode {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 2;
+            color: #d4d4d4;
+            background: #1e1e1e;
+            padding: 0;
+            margin: 0;
+        }
+
+        .code-line {
+            padding: 6px 10px;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .code-line.highlight {
+            background: #264f78;
+            border-left: 4px solid #4ec9b0;
+            padding-left: 16px;
+            transform: translateX(5px);
+            box-shadow: 0 0 10px rgba(78, 201, 176, 0.3);
+        }
+
+        .keyword {
+            color: #c586c0;
+            font-weight: bold;
+        }
+
+        .variable {
+            color: #9cdcfe;
+        }
+
+        .operator {
+            color: #d4d4d4;
+        }
+
+        .number {
+            color: #b5cea8;
+        }
+
+        .comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #ffffff;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #007ACC;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 122, 204, 0.3);
+        }
+
+        select option {
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+
+        input[type="number"] {
+            width: 100px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #sortBtn {
+            background: #0e639c;
+            color: white;
+        }
+
+        #sortBtn:hover {
+            background: #1177bb;
+        }
+
+        #randomBtn {
+            background: #0e639c;
+            color: white;
+        }
+
+        #randomBtn:hover {
+            background: #1177bb;
+        }
+
+        #resetBtn {
+            background: #0e639c;
+            color: white;
+        }
+
+        #resetBtn:hover {
+            background: #1177bb;
+        }
+
+        #pauseBtn {
+            background: #d97706;
+            color: white;
+        }
+
+        #pauseBtn:hover {
+            background: #f59e0b;
+        }
+
+        #pauseBtn.resumed {
+            background: #16a34a;
+        }
+
+        #pauseBtn.resumed:hover {
+            background: #22c55e;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-panel {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 122, 204, 0.6);
+            min-width: 120px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #007acc;
+        }
+
+        #canvas-container {
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 30px 20px 20px 20px;
+            min-height: 450px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bars-wrapper {
+            position: relative;
+            height: 350px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .bar {
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transition: all 0.4s ease;
+            font-size: 16px;
+        }
+
+        .bar.comparing {
+            background: linear-gradient(180deg, #ff6b6b 0%, #ff5252 100%);
+            box-shadow: 0 0 25px rgba(255, 107, 107, 0.8);
+            transform: scale(1.1);
+            z-index: 10;
+            animation: pulse 0.6s ease-in-out infinite;
+        }
+
+        .bar.swapping {
+            background: linear-gradient(180deg, #ffd93d 0%, #ffb800 100%);
+            box-shadow: 0 0 25px rgba(255, 217, 61, 0.8);
+            transform: scale(1.15);
+            z-index: 20;
+            animation: swing 0.4s ease-in-out;
+        }
+
+        .bar.sorted {
+            background: linear-gradient(180deg, #6bcf7f 0%, #4caf50 100%);
+            box-shadow: 0 0 25px rgba(107, 207, 127, 0.8);
+        }
+
+        .bar.pivot {
+            background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%);
+            box-shadow: 0 0 25px rgba(155, 89, 182, 0.8);
+            transform: scale(1.08);
+            z-index: 15;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1.1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes swing {
+
+            0%,
+            100% {
+                transform: scale(1.15) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.15) rotate(-3deg);
+            }
+
+            75% {
+                transform: scale(1.15) rotate(3deg);
+            }
+        }
+
+        .gap-indicator {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .status-message {
+            text-align: center;
+            font-size: 1.1em;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 5px;
+            background: #4a5f8c;
+            color: #fff;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #3a4f7c;
+        }
+
+        .explanation-box {
+            text-align: left;
+            font-size: 1em;
+            margin-top: 15px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            background: #264f78;
+            color: #fff;
+            min-height: 60px;
+            border-left: 4px solid #4ec9b0;
+            line-height: 1.6;
+        }
+
+        .explanation-box strong {
+            color: #4ec9b0;
+            font-weight: 600;
+        }
+
+        .pseudocode-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pseudocode-section::-webkit-scrollbar-track {
+            background: #2d2d2d;
+            border-radius: 4px;
+        }
+
+        .pseudocode-section::-webkit-scrollbar-thumb {
+            background: #4ec9b0;
+            border-radius: 4px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            section {
+                padding: 1.5rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* Accessibility: focus-visible */
+        :focus-visible {
+            outline: 3px solid #4ec9b0;
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+
+            .bar.comparing,
+            .bar.swapping {
+                animation: none !important;
+            }
+
+            * {
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Improve performance hints */
+        .bar {
+            will-change: transform;
+        }
+
+
+        /* --- UI Modern Soft Refresh Overrides --- */
+        :root {
+            --ui-radius-sm: 8px;
+            --ui-radius-md: 12px;
+            --ui-radius-lg: 16px;
+            --ui-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.25);
+            --ui-shadow-softer: 0 16px 40px rgba(0, 0, 0, 0.28);
+            --ui-surface: rgba(30, 30, 30, 0.72);
+            --ui-surface-strong: rgba(22, 22, 22, 0.78);
+            --ui-stroke: rgba(255, 255, 255, 0.05);
+            --primary: #4ec9b0;
+            --primary-strong: #2fb79e;
+            --accent: #007ACC;
+            --text: #e6e6e6;
+            --muted: #a0a0a0;
+        }
+
+        body {
+            color: var(--text);
+        }
+
+        /* Panels and cards */
+        .control-panel,
+        .pseudocode-section,
+        .explanation-box,
+        .stats-container,
+        .visualization-container,
+        .status-message,
+        .info-box,
+        .theory-section {
+            background: linear-gradient(180deg, var(--ui-surface), var(--ui-surface-strong));
+            border: 1px solid var(--ui-stroke);
+            border-radius: var(--ui-radius-lg);
+            box-shadow: var(--ui-shadow-soft);
+        }
+
+        /* Headers inside panels */
+        .section-title,
+        .panel-title,
+        h1,
+        h2,
+        h3 {
+            letter-spacing: 0.2px;
+        }
+
+        /* Inputs */
+        input[type="text"],
+        input[type="number"],
+        select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--ui-stroke);
+            color: var(--text);
+            border-radius: var(--ui-radius-sm);
+            transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease, transform .06s ease;
+        }
+
+        input[type="text"]:hover,
+        input[type="number"]:hover,
+        select:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(78, 201, 176, 0.15);
+        }
+
+        /* Buttons */
+        button,
+        .btn {
+            border-radius: var(--ui-radius-sm);
+            border: 1px solid var(--ui-stroke);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+            color: var(--text);
+            box-shadow: 0 2px 0 rgba(255, 255, 255, 0.04) inset, var(--ui-shadow-soft);
+            transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
+        }
+
+        button:hover,
+        .btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        }
+
+        button:active,
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+            color: #0b1614;
+            border-color: transparent;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 12px 28px rgba(78, 201, 176, 0.35);
+        }
+
+        /* Status and explanations */
+        .status-message {
+            border-left: 3px solid var(--accent);
+            color: var(--text);
+        }
+
+        .explanation-box {
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        /* Bars in visualization */
+        .bar {
+            border-radius: 6px 6px 2px 2px;
+            background: linear-gradient(180deg, rgba(0, 122, 204, 0.9), rgba(0, 122, 204, 0.55));
+        }
+
+        .bar.comparing {
+            box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.25);
+        }
+
+        .bar.swapping {
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.25);
+        }
+
+        .bar.sorted {
+            box-shadow: 0 0 0 3px rgba(107, 207, 127, 0.25);
+        }
+
+        /* Fine-tune scrollbars */
+        ::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent), var(--primary));
+            border-radius: 10px;
+        }
+
+        /* Spacing system */
+        .stack>*+* {
+            margin-top: 0.75rem;
+        }
+
+        /* Reduce motion affects transitions too */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 3D Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <nav>
+        <ul>
+            <li><a href="#home">Trang chủ</a></li>
+            <li><a href="#visualizer">Mô phỏng</a></li>
+            <li><a href="#theory">Lý thuyết</a></li>
+            <li><a href="#history">Lịch sử</a></li>
+            <li><a href="#code">Code mẫu</a></li>
+            <li><a href="#analysis">Phân tích</a></li>
+        </ul>
+    </nav>
+
+    <!-- Theme Toggle -->
+    <div id="themeToggleWrap" style="position: fixed; right: 16px; bottom: 16px; z-index: 1200;">
+        <button id="themeToggleBtn" class="btn" aria-label="Đổi giao diện" title="Đổi giao diện">🌓 Giao diện</button>
+    </div>
+
+    <div class="container">
+        <!-- SECTION: TRANG CHỦ -->
+        <section id="home" class="hero">
+            <h1>🐚 Shell Sort Visualizer</h1>
+            <p style="font-size: 1.2rem; margin: 1.5rem 0;">
+                Thuật toán sắp xếp hiệu quả - Cải tiến thông minh của Insertion Sort
+            </p>
+            <p style="font-size: 1rem; max-width: 800px; margin: 1.5rem auto;">
+                Shell Sort được phát minh bởi Donald Shell năm 1959. Đây là phiên bản tối ưu của
+                Insertion Sort, sử dụng khoảng cách (gap) giảm dần để sắp xếp các phần tử cách xa
+                nhau trước, giúp giảm đáng kể số lần di chuyển.
+            </p>
+            <a href="#visualizer" class="btn">🚀 Bắt đầu mô phỏng</a>
+        </section>
+
+        <!-- SECTION: VISUALIZER -->
+        <section id="visualizer">
+            <h2>🎬 Visualizer - Mô phỏng cách shellsort hoạt động </h2>
+
+            <div class="visualization-section" style="margin-bottom: 20px;">
+                <div class="controls">
+                    <div class="input-group">
+                        <label>Mảng:</label>
+                        <input type="text" id="arrayInput" placeholder="VD: 64,34,25,12,22,11,90"
+                            value="64,34,25,12,22,11,90" aria-label="Nhập mảng số, phân tách bởi dấu phẩy">
+                    </div>
+                    <div class="input-group">
+                        <label>Gap Sequence:</label>
+                        <select id="gapSequenceSelect" aria-label="Chọn dãy gap cho Shell Sort">
+                            <option value="shell">Shell Original (n/2)</option>
+                            <option value="hibbard">Hibbard (2^k - 1)</option>
+                            <option value="knuth" selected>Knuth (3^k - 1)/2 ⭐</option>
+                            <option value="ciura">Ciura (Optimal) 🏆</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Tốc độ (s):</label>
+                        <input type="number" id="speedInput" min="0.1" max="3" step="0.1" value="0.8"
+                            aria-label="Tốc độ hoạt ảnh tính bằng giây">
+                    </div>
+                    <button id="sortBtn">▶ Sắp xếp</button>
+                    <button id="pauseBtn" style="display: none;">⏸ Tạm dừng</button>
+                    <button id="randomBtn">🎲 Ngẫu nhiên</button>
+                    <button id="resetBtn">🔄 Reset</button>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-box">
+                        <div class="info-label">Gap hiện tại</div>
+                        <div class="info-value" id="currentGap">-</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">So sánh</div>
+                        <div class="info-value" id="compareCount">0</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Hoán đổi</div>
+                        <div class="info-value" id="swapCount">0</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Bước</div>
+                        <div class="info-value" id="stepCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-layout">
+                <div class="visualization-section">
+                    <div id="canvas-container">
+                        <div class="gap-indicator" id="gapIndicator" style="display: none;">Gap: <span
+                                id="gapValue">-</span></div>
+                        <div class="bars-wrapper" id="barsWrapper"></div>
+                    </div>
+                    <div class="status-message" id="statusMsg" role="status" aria-live="polite">Nhập mảng và nhấn "Sắp
+                        xếp" để bắt đầu</div>
+                    <div class="explanation-box" id="explanationBox" role="status" aria-live="polite">Chờ bắt đầu mô
+                        phỏng để xem giải thích chi tiết từng bước...</div>
+                </div>
+
+                <div class="pseudocode-section">
+                    <div class="pseudocode-header">📝 Pseudocode: Shell Sort (Knuth Sequence)</div>
+                    <pre id="pseudocode"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LÝ THUYẾT -->
+        <section id="theory">
+            <h2>📚 Lý thuyết thuật toán Shell Sort</h2>
+
+            <h3>Định nghĩa</h3>
+            <p>
+                <strong>Shell Sort</strong> là một thuật toán sắp xếp so sánh được phát triển bởi Donald Shell vào năm
+                1959.
+                Đây là một cải tiến của thuật toán Insertion Sort, cho phép trao đổi các phần tử ở xa nhau.
+            </p>
+
+            <h3>💡 Ý tưởng cốt lõi (Intuition)</h3>
+            <p>
+                Điểm yếu của Insertion Sort là khi một phần tử nhỏ nằm ở cuối mảng, nó phải
+                "bước" từng bước một về đầu mảng, gây ra nhiều phép hoán đổi.
+            </p>
+            <p>
+                <strong>Shell Sort giải quyết vấn đề này bằng cách:</strong>
+            </p>
+            <ol>
+                <li>Chia mảng thành các "sub-array" dựa trên gap</li>
+                <li>Sắp xếp từng sub-array bằng Insertion Sort</li>
+                <li>Giảm gap và lặp lại cho đến gap = 1</li>
+                <li>Khi gap = 1, mảng đã gần như được sắp xếp, Insertion Sort chạy rất nhanh</li>
+            </ol>
+
+            <h3>🔍 Vì sao giảm khoảng cách (gap) giúp tăng tốc?</h3>
+            <p>
+                <strong>Bước 1 (Gap lớn):</strong> Di chuyển các phần tử nhỏ về gần vị trí đúng nhanh chóng,
+                mỗi lần so sánh di chuyển phần tử xa hơn.
+            </p>
+            <p>
+                <strong>Bước 2 (Gap nhỏ dần):</strong> Tinh chỉnh vị trí các phần tử với độ chính xác cao hơn.
+            </p>
+            <p>
+                <strong>Bước cuối (Gap = 1):</strong> Mảng đã "gần đúng" (almost sorted), Insertion Sort
+                chỉ cần vài phép so sánh và hoán đổi để hoàn thành.
+            </p>
+
+            <h3>⏱️ Độ phức tạp thời gian</h3>
+            <table>
+                <tr>
+                    <th>Trường hợp</th>
+                    <th>Độ phức tạp</th>
+                    <th>Ghi chú</th>
+                </tr>
+                <tr>
+                    <td>Best Case</td>
+                    <td><strong>O(n log n)</strong></td>
+                    <td>Mảng đã sắp xếp hoặc gần sắp xếp</td>
+                </tr>
+                <tr>
+                    <td>Average Case</td>
+                    <td><strong>O(n^1.3) - O(n^1.5)</strong></td>
+                    <td>Phụ thuộc vào gap sequence</td>
+                </tr>
+                <tr>
+                    <td>Worst Case</td>
+                    <td><strong>O(n²)</strong></td>
+                    <td>Shell's original sequence</td>
+                </tr>
+            </table>
+            <p style="color: #888; font-style: italic;">
+                * Với gap sequence tốt như Ciura, độ phức tạp trung bình là O(n^1.3)
+            </p>
+
+            <h3>💾 Độ phức tạp không gian & Tính ổn định</h3>
+            <ul>
+                <li><strong>Space Complexity:</strong> O(1) - Sắp xếp tại chỗ (in-place)</li>
+                <li><strong>Stability:</strong> Không ổn định (Unstable) - Các phần tử bằng nhau có thể đổi vị trí tương
+                    đối</li>
+            </ul>
+
+            <h3>🔢 Các Gap Sequence nổi tiếng</h3>
+            <ul>
+                <li><strong>Shell Original:</strong> n/2, n/4, ..., 1 - O(n²)</li>
+                <li><strong>Hibbard:</strong> 2^k - 1 - O(n^1.5)</li>
+                <li><strong>Knuth:</strong> (3^k - 1)/2 - O(n^1.5) ⭐ Đang dùng</li>
+                <li><strong>Ciura:</strong> 1, 4, 10, 23, 57, ... - ~O(n^1.3)</li>
+            </ul>
+
+            <h3>📝 Pseudocode chi tiết</h3>
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; font-family: 'Consolas', monospace; color: #d4d4d4; overflow-x: auto;">
+                <pre style="margin: 0; color: #d4d4d4;">procedure shellSort(array, n)
+    // Khởi tạo gap (thường là n/2)
+    gap = n / 2
+
+    // Giảm gap cho đến khi gap = 0
+    while gap > 0 do
+        // Thực hiện insertion sort với gap hiện tại
+        for i = gap to n-1 do
+            // Lưu phần tử hiện tại
+            temp = array[i]
+            j = i
+
+            // Dịch chuyển các phần tử cách gap đã sắp xếp
+            while j >= gap and array[j - gap] > temp do
+                array[j] = array[j - gap]
+                j = j - gap
+            end while
+
+            // Đặt temp vào vị trí đúng
+            array[j] = temp
+        end for
+
+        // Giảm gap
+        gap = gap / 2
+    end while
+end procedure</pre>
+            </div>
+        </section>
+
+        <!-- SECTION: LỊCH SỬ -->
+        <section id="history">
+            <h2>📜 Lịch sử thuật toán Shell Sort</h2>
+
+            <h3>👤 Donald L. Shell (1959)</h3>
+            <p>
+                Shell Sort được phát minh bởi <strong>Donald L. Shell</strong> vào năm 1959 và
+                được công bố trong bài báo "A High-Speed Sorting Procedure" trên tạp chí
+                Communications of the ACM.
+            </p>
+            <p>
+                Đây là một trong những thuật toán sắp xếp đầu tiên vượt qua rào cản O(n²) của
+                các thuật toán đơn giản như Bubble Sort và Insertion Sort.
+            </p>
+
+            <h3>🔢 Timeline các Gap Sequence</h3>
+
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #007acc; margin: 1rem 0;">
+                <h4 style="color: #007acc;">1. Shell's Original Sequence (1959)</h4>
+                <p><strong>Công thức:</strong> gap = n/2, n/4, n/8, ..., 1</p>
+                <p><strong>Độ phức tạp:</strong> O(n²) worst case</p>
+                <p><strong>Ưu điểm:</strong> Đơn giản, dễ cài đặt</p>
+                <p><strong>Nhược điểm:</strong> Không hiệu quả, vẫn có thể đạt O(n²)</p>
+            </div>
+
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #007acc; margin: 1rem 0;">
+                <h4 style="color: #007acc;">2. Hibbard Sequence (1963)</h4>
+                <p><strong>Công thức:</strong> 2^k - 1 (1, 3, 7, 15, 31, 63, ...)</p>
+                <p><strong>Độ phức tạp:</strong> O(n^1.5) worst case</p>
+                <p><strong>Ưu điểm:</strong> Cải thiện đáng kể so với original</p>
+                <p><strong>Nhược điểm:</strong> Vẫn chưa tối ưu cho thực tế</p>
+            </div>
+
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #007acc; margin: 1rem 0;">
+                <h4 style="color: #007acc;">3. Knuth Sequence (1973)</h4>
+                <p><strong>Công thức:</strong> (3^k - 1)/2 (1, 4, 13, 40, 121, ...)</p>
+                <p><strong>Độ phức tạp:</strong> O(n^1.5) worst case</p>
+                <p><strong>Ưu điểm:</strong> Hiệu quả trong thực tế, dễ tính toán</p>
+                <p><strong>Nhược điểm:</strong> Không phải tối ưu nhất</p>
+            </div>
+
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #4caf50; margin: 1rem 0;">
+                <h4 style="color: #4caf50;">4. Ciura Sequence (2001) ⭐ Khuyên dùng</h4>
+                <p><strong>Dãy số:</strong> 1, 4, 10, 23, 57, 132, 301, 701, 1750, ...</p>
+                <p><strong>Độ phức tạp:</strong> ~O(n^1.3) empirical</p>
+                <p><strong>Ưu điểm:</strong> Tốt nhất qua thực nghiệm, rất hiệu quả</p>
+                <p><strong>Nhược điểm:</strong> Không có công thức rõ ràng, phải lưu trữ dãy</p>
+                <p style="background: #264f78; padding: 0.8rem; border-radius: 5px; margin-top: 0.5rem;">
+                    💡 Marcin Ciura tìm ra sequence này qua thử nghiệm thực tế trên hàng triệu test case!
+                </p>
+            </div>
+
+            <h3>📊 So sánh các Gap Sequence</h3>
+            <table>
+                <tr>
+                    <th>Sequence</th>
+                    <th>Năm</th>
+                    <th>Worst Case</th>
+                    <th>Thực tế</th>
+                    <th>Đánh giá</th>
+                </tr>
+                <tr>
+                    <td>Shell Original</td>
+                    <td>1959</td>
+                    <td>O(n²)</td>
+                    <td>Chậm</td>
+                    <td>⭐⭐</td>
+                </tr>
+                <tr>
+                    <td>Hibbard</td>
+                    <td>1963</td>
+                    <td>O(n^1.5)</td>
+                    <td>Trung bình</td>
+                    <td>⭐⭐⭐</td>
+                </tr>
+                <tr>
+                    <td>Knuth</td>
+                    <td>1973</td>
+                    <td>O(n^1.5)</td>
+                    <td>Tốt</td>
+                    <td>⭐⭐⭐⭐</td>
+                </tr>
+                <tr>
+                    <td>Ciura</td>
+                    <td>2001</td>
+                    <td>Unknown</td>
+                    <td>Xuất sắc</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- SECTION: CODE MẪU -->
+        <section id="code">
+            <h2>💻 Code mẫu Shell Sort</h2>
+
+            <h3>C++</h3>
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto;">
+                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">#include &lt;iostream&gt;
+#include &lt;vector&gt;
+using namespace std;
+
+void shellSort(vector&lt;int&gt;& arr) {
+    int n = arr.size();
+
+    // Bắt đầu với gap lớn, giảm dần
+    for (int gap = n/2; gap > 0; gap /= 2) {
+        // Thực hiện insertion sort với gap hiện tại
+        for (int i = gap; i < n; i++) {
+            int temp = arr[i];
+            int j = i;
+
+            // Dịch chuyển các phần tử đã sắp xếp
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+
+            arr[j] = temp;
+        }
+    }
+}
+
+int main() {
+    vector&lt;int&gt; arr = {64, 34, 25, 12, 22, 11, 90};
+
+    cout << "Mảng ban đầu: ";
+    for (int x : arr) cout << x << " ";
+    cout << endl;
+
+    shellSort(arr);
+
+    cout << "Mảng sau khi sắp xếp: ";
+    for (int x : arr) cout << x << " ";
+    cout << endl;
+
+    return 0;
+}</pre>
+            </div>
+
+            <h3>Python</h3>
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto; margin-top: 1.5rem;">
+                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">def shell_sort(arr):
+    n = len(arr)
+    gap = n // 2
+
+    # Giảm gap cho đến 0
+    while gap > 0:
+        # Insertion sort với gap hiện tại
+        for i in range(gap, n):
+            temp = arr[i]
+            j = i
+
+            # Dịch chuyển các phần tử đã sắp xếp
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+
+            arr[j] = temp
+
+        gap //= 2
+
+    return arr
+
+# Test
+arr = [64, 34, 25, 12, 22, 11, 90]
+print("Mảng ban đầu:", arr)
+shell_sort(arr)
+print("Mảng sau khi sắp xếp:", arr)</pre>
+            </div>
+
+            <h3>JavaScript</h3>
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto; margin-top: 1.5rem;">
+                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">function shellSort(arr) {
+    const n = arr.length;
+    let gap = Math.floor(n / 2);
+
+    // Giảm gap cho đến 0
+    while (gap > 0) {
+        // Insertion sort với gap hiện tại
+        for (let i = gap; i < n; i++) {
+            const temp = arr[i];
+            let j = i;
+
+            // Dịch chuyển các phần tử đã sắp xếp
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+
+            arr[j] = temp;
+        }
+
+        gap = Math.floor(gap / 2);
+    }
+
+    return arr;
+}
+
+// Test
+const arr = [64, 34, 25, 12, 22, 11, 90];
+console.log("Mảng ban đầu:", arr);
+shellSort(arr);
+console.log("Mảng sau khi sắp xếp:", arr);</pre>
+            </div>
+
+            <h3>Java</h3>
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto; margin-top: 1.5rem;">
+                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">public class ShellSort {
+    public static void shellSort(int[] arr) {
+        int n = arr.length;
+
+        // Bắt đầu với gap lớn, giảm dần
+        for (int gap = n/2; gap > 0; gap /= 2) {
+            // Thực hiện insertion sort với gap hiện tại
+            for (int i = gap; i < n; i++) {
+                int temp = arr[i];
+                int j = i;
+
+                // Dịch chuyển các phần tử đã sắp xếp
+                while (j >= gap && arr[j - gap] > temp) {
+                    arr[j] = arr[j - gap];
+                    j -= gap;
+                }
+
+                arr[j] = temp;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] arr = {64, 34, 25, 12, 22, 11, 90};
+
+        System.out.print("Mảng ban đầu: ");
+        for (int x : arr) System.out.print(x + " ");
+        System.out.println();
+
+        shellSort(arr);
+
+        System.out.print("Mảng sau khi sắp xếp: ");
+        for (int x : arr) System.out.print(x + " ");
+        System.out.println();
+    }
+}</pre>
+            </div>
+
+            <h3>💡 Lưu ý khi implement</h3>
+            <ul>
+                <li><strong>Gap sequence:</strong> Code trên dùng Shell's original (n/2). Để tối ưu hơn, hãy dùng Knuth
+                    hoặc Ciura sequence</li>
+                <li><strong>In-place:</strong> Tất cả các implementation trên đều sắp xếp tại chỗ, không cần bộ nhớ phụ
+                </li>
+                <li><strong>Stable:</strong> Shell Sort không phải stable sort, thứ tự tương đối của các phần tử bằng
+                    nhau có thể thay đổi</li>
+                <li><strong>Performance:</strong> Shell Sort hiệu quả với mảng kích thước vừa (< 10,000 phần tử)</li>
+            </ul>
+        </section>
+
+        <!-- SECTION: PHÂN TÍCH -->
+        <section id="analysis">
+            <h2>📊 Phân tích và So sánh</h2>
+
+            <h3>So sánh với các thuật toán khác</h3>
+            <table>
+                <tr>
+                    <th>Thuật toán</th>
+                    <th>Best Case</th>
+                    <th>Average Case</th>
+                    <th>Worst Case</th>
+                    <th>Space</th>
+                </tr>
+                <tr>
+                    <td><strong>Shell Sort</strong></td>
+                    <td>O(n log n)</td>
+                    <td>O(n^1.3)</td>
+                    <td>O(n²)</td>
+                    <td>O(1)</td>
+                </tr>
+                <tr>
+                    <td>Insertion Sort</td>
+                    <td>O(n)</td>
+                    <td>O(n²)</td>
+                    <td>O(n²)</td>
+                    <td>O(1)</td>
+                </tr>
+                <tr>
+                    <td>Quick Sort</td>
+                    <td>O(n log n)</td>
+                    <td>O(n log n)</td>
+                    <td>O(n²)</td>
+                    <td>O(log n)</td>
+                </tr>
+                <tr>
+                    <td>Merge Sort</td>
+                    <td>O(n log n)</td>
+                    <td>O(n log n)</td>
+                    <td>O(n log n)</td>
+                    <td>O(n)</td>
+                </tr>
+            </table>
+
+            <h3>Ưu điểm</h3>
+            <ul>
+                <li>In-place sorting - Không cần bộ nhớ phụ</li>
+                <li>Đơn giản và dễ cài đặt</li>
+                <li>Hiệu quả với mảng vừa (< 10,000 phần tử)</li>
+                <li>Adaptive - nhanh với dữ liệu gần sắp xếp</li>
+            </ul>
+
+            <h3>Nhược điểm</h3>
+            <ul>
+                <li>Không ổn định (unstable)</li>
+                <li>Độ phức tạp phụ thuộc gap sequence</li>
+                <li>Không tối ưu với mảng rất lớn</li>
+                <li>Khó phân tích độ phức tạp chính xác</li>
+            </ul>
+
+            <h3>🎯 Khi nào nên dùng Shell Sort?</h3>
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #4caf50; margin: 1rem 0;">
+                <h4 style="color: #4caf50;">✅ Nên dùng khi:</h4>
+                <ul>
+                    <li>Mảng có kích thước vừa phải (1,000 - 10,000 phần tử)</li>
+                    <li>Giới hạn bộ nhớ (cần in-place sorting)</li>
+                    <li>Muốn code đơn giản, dễ debug</li>
+                    <li>Dữ liệu gần như đã sắp xếp</li>
+                    <li>Không yêu cầu stable sort</li>
+                    <li>Cần thuật toán dễ implement hơn Quick Sort hoặc Merge Sort</li>
+                </ul>
+            </div>
+
+            <div
+                style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border-left: 4px solid #ff5252; margin: 1rem 0;">
+                <h4 style="color: #ff5252;">❌ Không nên dùng khi:</h4>
+                <ul>
+                    <li>Mảng rất lớn (&gt; 100,000 phần tử) → Dùng Quick Sort hoặc Merge Sort</li>
+                    <li>Cần stable sort → Dùng Merge Sort</li>
+                    <li>Cần worst case O(n log n) đảm bảo → Dùng Heap Sort</li>
+                    <li>Dữ liệu hoàn toàn ngẫu nhiên và lớn → Quick Sort thường tốt hơn</li>
+                    <li>Cần performance tuyệt đối → Dùng thư viện sorting có sẵn (std::sort, Arrays.sort, ...)</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- SECTION: TÀI LIỆU THAM KHẢO -->
+        <section id="references">
+            <h2>📖 Tài liệu tham khảo</h2>
+
+            <h3>Sách và Bài báo</h3>
+            <ul>
+                <li>
+                    <strong>Shell, D. L. (1959)</strong><br>
+                    "A High-Speed Sorting Procedure"<br>
+                    <em>Communications of the ACM, 2(7), 30-32</em>
+                </li>
+                <li>
+                    <strong>Knuth, D. E. (1997)</strong><br>
+                    "The Art of Computer Programming, Volume 3: Sorting and Searching"<br>
+                    <em>Addison-Wesley</em>
+                </li>
+                <li>
+                    <strong>Ciura, M. (2001)</strong><br>
+                    "Best Increments for the Average Case of Shellsort"<br>
+                    <em>13th International Symposium on Fundamentals of Computation Theory</em>
+                </li>
+                <li>
+                    <strong>Sedgewick, R. (1986)</strong><br>
+                    "A New Upper Bound for Shellsort"<br>
+                    <em>Journal of Algorithms, 7(2), 159-173</em>
+                </li>
+            </ul>
+
+            <h3>Tài nguyên trực tuyến</h3>
+            <ul>
+                <li><a href="https://en.wikipedia.org/wiki/Shellsort" style="color: #007ACC;">Wikipedia - Shellsort</a>
+                </li>
+                <li><a href="https://www.geeksforgeeks.org/shellsort/" style="color: #007ACC;">GeeksforGeeks - Shell
+                        Sort</a></li>
+                <li><a href="https://visualgo.net/en/sorting" style="color: #007ACC;">VisuAlgo - Sorting Algorithms</a>
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        // ========== GLOBAL VARIABLES ==========
+        let array = [];
+        let originalArray = [];
+        let steps = [];
+        let isRunning = false;
+        let isPaused = false;
+        let animationSpeed = 800;
+        let compareCount = 0;
+        let swapCount = 0;
+        let stepCount = 0;
+        let barElements = [];
+        let currentGapSequence = 'knuth';
+
+        // ========== DOM ELEMENTS ==========
+        const arrayInput = document.getElementById('arrayInput');
+        const speedInput = document.getElementById('speedInput');
+        const gapSequenceSelect = document.getElementById('gapSequenceSelect');
+        const sortBtn = document.getElementById('sortBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const randomBtn = document.getElementById('randomBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const barsWrapper = document.getElementById('barsWrapper');
+        const statusMsg = document.getElementById('statusMsg');
+        const explanationBox = document.getElementById('explanationBox');
+        const currentGapDisplay = document.getElementById('currentGap');
+        const compareCountDisplay = document.getElementById('compareCount');
+        const swapCountDisplay = document.getElementById('swapCount');
+        const stepCountDisplay = document.getElementById('stepCount');
+        const pseudocodeElement = document.getElementById('pseudocode');
+        const gapIndicator = document.getElementById('gapIndicator');
+        const gapValue = document.getElementById('gapValue');
+
+        // ========== PSEUDOCODE ==========
+        const pseudocodeShell = [
+            '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Shell Original (n/2)</span>',
+            '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
+            '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
+            '    ',
+            '    <span class="comment">// Khởi tạo gap = n/2</span>',
+            '    <span class="variable">gap</span> <span class="operator">=</span> <span class="variable">n</span> <span class="operator">/</span> <span class="number">2</span>',
+            '    ',
+            '    ',
+            '    ',
+            '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
+            '    <span class="keyword">while</span> <span class="variable">gap</span> <span class="operator">&gt;</span> <span class="number">0</span>:',
+            '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
+            '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
+            '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
+            '            ',
+            '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
+            '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
+            '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
+            '            ',
+            '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
+            '        ',
+            '        <span class="variable">gap</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="operator">/</span> <span class="number">2</span>',
+            '    ',
+            '    <span class="keyword">return</span> <span class="variable">array</span>'
+        ];
+
+        const pseudocodeHibbard = [
+            '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Hibbard (2^k - 1)</span>',
+            '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
+            '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
+            '    ',
+            '    <span class="comment">// Tính dãy gap Hibbard: 1, 3, 7, 15, 31, ...</span>',
+            '    <span class="variable">k</span> <span class="operator">=</span> <span class="number">1</span>',
+            '    <span class="keyword">while</span> <span class="number">2</span><span class="operator">^</span><span class="variable">k</span> <span class="operator">-</span> <span class="number">1</span> <span class="operator">&lt;</span> <span class="variable">n</span>:',
+            '        <span class="variable">k</span> <span class="operator">=</span> <span class="variable">k</span> <span class="operator">+</span> <span class="number">1</span>',
+            '    ',
+            '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
+            '    <span class="keyword">while</span> <span class="variable">k</span> <span class="operator">&gt;</span> <span class="number">0</span>:',
+            '        <span class="variable">gap</span> <span class="operator">=</span> <span class="number">2</span><span class="operator">^</span><span class="variable">k</span> <span class="operator">-</span> <span class="number">1</span>',
+            '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
+            '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
+            '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
+            '            ',
+            '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
+            '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
+            '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
+            '            ',
+            '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
+            '        ',
+            '        <span class="variable">k</span> <span class="operator">=</span> <span class="variable">k</span> <span class="operator">-</span> <span class="number">1</span>',
+            '    ',
+            '    <span class="keyword">return</span> <span class="variable">array</span>'
+        ];
+
+        const pseudocodeKnuth = [
+            '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Knuth (3^k - 1) / 2</span>',
+            '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
+            '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
+            '    ',
+            '    <span class="comment">// Tính khoảng cách Knuth lớn nhất &lt;= n</span>',
+            '    <span class="variable">gap</span> <span class="operator">=</span> <span class="number">1</span>',
+            '    <span class="keyword">while</span> <span class="variable">gap</span> <span class="operator">&lt;</span> <span class="variable">n</span> <span class="operator">/</span> <span class="number">3</span>:',
+            '        <span class="variable">gap</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="operator">*</span> <span class="number">3</span> <span class="operator">+</span> <span class="number">1</span>',
+            '    ',
+            '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
+            '    <span class="keyword">while</span> <span class="variable">gap</span> <span class="operator">&gt;</span> <span class="number">0</span>:',
+            '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
+            '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
+            '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
+            '            ',
+            '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
+            '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
+            '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
+            '            ',
+            '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
+            '        ',
+            '        <span class="variable">gap</span> <span class="operator">=</span> (<span class="variable">gap</span> <span class="operator">-</span> <span class="number">1</span>) <span class="operator">/</span> <span class="number">3</span>',
+            '    ',
+            '    <span class="keyword">return</span> <span class="variable">array</span>'
+        ];
+
+        const pseudocodeCiura = [
+            '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Ciura (Optimal)</span>',
+            '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
+            '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
+            '    ',
+            '    <span class="comment">// Dãy Ciura: 1, 4, 10, 23, 57, 132, 301, 701, ...</span>',
+            '    <span class="variable">ciura</span> <span class="operator">=</span> [<span class="number">1</span>, <span class="number">4</span>, <span class="number">10</span>, <span class="number">23</span>, <span class="number">57</span>, <span class="number">132</span>, <span class="number">301</span>, <span class="number">701</span>, ...]',
+            '    <span class="variable">gaps</span> <span class="operator">=</span> <span class="keyword">filter</span>(<span class="variable">ciura</span>, <span class="variable">g</span> <span class="operator">&lt;</span> <span class="variable">n</span>)',
+            '    ',
+            '    ',
+            '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
+            '    <span class="keyword">for each</span> <span class="variable">gap</span> <span class="keyword">in</span> <span class="variable">gaps</span> (descending):',
+            '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
+            '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
+            '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
+            '            ',
+            '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
+            '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
+            '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
+            '            ',
+            '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
+            '        ',
+            '        ',
+            '    ',
+            '    <span class="keyword">return</span> <span class="variable">array</span>'
+        ];
+
+        let pseudocodeLines = pseudocodeKnuth; // Default to Knuth
+
+        function getPseudocode() {
+            switch (currentGapSequence) {
+                case 'shell':
+                    return pseudocodeShell;
+                case 'hibbard':
+                    return pseudocodeHibbard;
+                case 'knuth':
+                    return pseudocodeKnuth;
+                case 'ciura':
+                    return pseudocodeCiura;
+                default:
+                    return pseudocodeKnuth;
+            }
+        }
+
+        // ========== INITIALIZE ==========
+        function init() {
+            renderPseudocode();
+            parseArray();
+            renderBars();
+        }
+
+        function renderPseudocode() {
+            pseudocodeLines = getPseudocode();
+            pseudocodeElement.innerHTML = pseudocodeLines
+                .map((line, index) => `<div class="code-line" data-line="${index}">${line}</div>`)
+                .join('');
+            updatePseudocodeHeader();
+        }
+
+        function updatePseudocodeHeader() {
+            const header = document.querySelector('.pseudocode-header');
+            const sequenceNames = {
+                'shell': 'Shell Original (n/2)',
+                'hibbard': 'Hibbard (2^k - 1)',
+                'knuth': 'Knuth (3^k - 1)/2',
+                'ciura': 'Ciura (Optimal)'
+            };
+            if (header) {
+                header.textContent = `📝 Pseudocode: Shell Sort (${sequenceNames[currentGapSequence]})`;
+            }
+        }
+
+        function highlightLine(lineNumber) {
+            const lines = document.querySelectorAll('.code-line');
+            const pseudocodeSection = document.querySelector('.pseudocode-section');
+
+            lines.forEach((line, index) => {
+                if (index === lineNumber) {
+                    line.classList.add('highlight');
+
+                    // Chỉ scroll trong khung pseudocode, không scroll toàn trang
+                    if (pseudocodeSection) {
+                        const lineTop = line.offsetTop;
+                        const sectionScrollTop = pseudocodeSection.scrollTop;
+                        const sectionHeight = pseudocodeSection.clientHeight;
+                        const lineHeight = line.clientHeight;
+
+                        // Scroll để dòng ở giữa khung pseudocode
+                        const targetScroll = lineTop - (sectionHeight / 2) + (lineHeight / 2);
+                        pseudocodeSection.scrollTo({
+                            top: targetScroll,
+                            behavior: 'smooth'
+                        });
+                    }
+                } else {
+                    line.classList.remove('highlight');
+                }
+            });
+        }
+
+        function clearHighlight() {
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('highlight');
+            });
+        }
+
+        // ========== ARRAY PARSING ==========
+        function parseArray() {
+            const input = arrayInput.value.trim();
+            array = input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+
+            if (array.length === 0) {
+                array = [64, 34, 25, 12, 22, 11, 90];
+            }
+
+            originalArray = [...array];
+            resetCounters();
+        }
+
+        function resetCounters() {
+            compareCount = 0;
+            swapCount = 0;
+            stepCount = 0;
+            updateDisplay();
+            currentGapDisplay.textContent = '-';
+        }
+
+        function updateDisplay() {
+            compareCountDisplay.textContent = compareCount;
+            swapCountDisplay.textContent = swapCount;
+            stepCountDisplay.textContent = stepCount;
+        }
+
+        // ========== BAR RENDERING ==========
+        function renderBars() {
+            barsWrapper.innerHTML = '';
+            barElements = [];
+
+            const containerWidth = barsWrapper.offsetWidth;
+            const numBars = array.length;
+            const totalGap = (numBars - 1) * 5;
+            const barWidth = Math.min((containerWidth - totalGap) / numBars, 70);
+
+            const maxValue = Math.max(...array);
+            const maxHeight = 300;
+
+            array.forEach((value, index) => {
+                const barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+                barContainer.style.width = barWidth + 'px';
+
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.width = barWidth + 'px';
+                bar.style.height = ((value / maxValue) * maxHeight) + 'px';
+                bar.textContent = value;
+
+                barContainer.appendChild(bar);
+                barsWrapper.appendChild(barContainer);
+
+                barElements.push({
+                    container: barContainer,
+                    bar: bar,
+                    value: value,
+                    index: index
+                });
+            });
+        }
+
+        // ========== ANIMATION FUNCTIONS ==========
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function setBarState(index, state) {
+            if (barElements[index]) {
+                barElements[index].bar.className = `bar ${state}`;
+            }
+        }
+
+        function clearBarStates() {
+            barElements.forEach(bar => {
+                bar.bar.className = 'bar';
+            });
+        }
+
+        async function animateCompare(i, j) {
+            setBarState(i, 'comparing');
+            setBarState(j, 'comparing');
+            compareCount++;
+            updateDisplay();
+            await sleep(animationSpeed * 0.5);
+        }
+
+        async function animateSwap(fromIndex, toIndex) {
+            setBarState(fromIndex, 'swapping');
+            setBarState(toIndex, 'swapping');
+
+            const fromContainer = barElements[fromIndex].container;
+            const toContainer = barElements[toIndex].container;
+
+            const fromRect = fromContainer.getBoundingClientRect();
+            const toRect = toContainer.getBoundingClientRect();
+            const distance = toRect.left - fromRect.left;
+
+            fromContainer.style.transform = `translateX(${distance}px)`;
+            toContainer.style.transform = `translateX(${-distance}px)`;
+
+            swapCount++;
+            updateDisplay();
+            await sleep(animationSpeed * 0.7);
+
+            fromContainer.style.transform = '';
+            toContainer.style.transform = '';
+
+            const parent = barsWrapper;
+            const fromNextSibling = fromContainer.nextSibling;
+            const toNextSibling = toContainer.nextSibling;
+
+            if (fromIndex < toIndex) {
+                parent.insertBefore(toContainer, fromContainer);
+                if (toNextSibling) {
+                    parent.insertBefore(fromContainer, toNextSibling);
+                } else {
+                    parent.appendChild(fromContainer);
+                }
+            } else {
+                parent.insertBefore(fromContainer, toContainer);
+                if (fromNextSibling) {
+                    parent.insertBefore(toContainer, fromNextSibling);
+                } else {
+                    parent.appendChild(toContainer);
+                }
+            }
+
+            [barElements[fromIndex], barElements[toIndex]] = [barElements[toIndex], barElements[fromIndex]];
+            barElements[fromIndex].index = fromIndex;
+            barElements[toIndex].index = toIndex;
+
+            await sleep(animationSpeed * 0.3);
+
+            setBarState(fromIndex, '');
+            setBarState(toIndex, '');
+        }
+
+        async function animateSet(index, value) {
+            if (barElements[index]) {
+                const bar = barElements[index].bar;
+                bar.textContent = value;
+                barElements[index].value = value;
+
+                const maxValue = Math.max(...array);
+                const maxHeight = 300;
+                bar.style.height = ((value / maxValue) * maxHeight) + 'px';
+            }
+        }
+
+        async function animateSorted(index) {
+            setBarState(index, 'sorted');
+            await sleep(animationSpeed * 0.4);
+            setBarState(index, '');
+        }
+
+        async function showAllSorted() {
+            for (let i = 0; i < barElements.length; i++) {
+                setBarState(i, 'sorted');
+                await sleep(60);
+            }
+            await sleep(800);
+            clearBarStates();
+        }
+
+        // ========== GAP SEQUENCE FUNCTIONS ==========
+
+        // Shell Original: n/2, n/4, n/8, ..., 1
+        function generateShellGaps(n) {
+            const gaps = [];
+            let gap = Math.floor(n / 2);
+
+            while (gap > 0) {
+                gaps.push(gap);
+                gap = Math.floor(gap / 2);
+            }
+
+            return gaps;
+        }
+
+        // Hibbard: 2^k - 1 (1, 3, 7, 15, 31, 63, ...)
+        function generateHibbardGaps(n) {
+            const gaps = [];
+            let k = 1;
+            let gap = Math.pow(2, k) - 1;
+
+            // Generate all gaps up to n
+            while (gap < n) {
+                gaps.push(gap);
+                k++;
+                gap = Math.pow(2, k) - 1;
+            }
+
+            // Reverse to start with largest gap
+            return gaps.reverse();
+        }
+
+        // Knuth: (3^k - 1)/2 (1, 4, 13, 40, 121, ...)
+        function generateKnuthGaps(n) {
+            const gaps = [];
+            let gap = 1;
+
+            while (gap < n / 3) {
+                gap = gap * 3 + 1;
+            }
+
+            while (gap > 0) {
+                gaps.push(gap);
+                gap = Math.floor((gap - 1) / 3);
+            }
+
+            return gaps;
+        }
+
+        // Ciura: Empirically optimal sequence
+        function generateCiuraGaps(n) {
+            const ciuraSequence = [1, 4, 10, 23, 57, 132, 301, 701, 1750, 3937, 8858, 19930, 44842, 100894, 227011, 510774, 1149241, 2585792, 5818032, 13090572, 29453787, 66271020, 149109795, 335497038, 754868335, 1698453253];
+
+            // Find gaps that are less than n
+            const gaps = [];
+            for (let i = ciuraSequence.length - 1; i >= 0; i--) {
+                if (ciuraSequence[i] < n) {
+                    gaps.push(ciuraSequence[i]);
+                }
+            }
+
+            // If no suitable gap found, start with largest available
+            if (gaps.length === 0) {
+                gaps.push(1);
+            }
+
+            return gaps;
+        }
+
+        // Get gaps based on current sequence selection
+        function getGapSequence(n) {
+            switch (currentGapSequence) {
+                case 'shell':
+                    return generateShellGaps(n);
+                case 'hibbard':
+                    return generateHibbardGaps(n);
+                case 'knuth':
+                    return generateKnuthGaps(n);
+                case 'ciura':
+                    return generateCiuraGaps(n);
+                default:
+                    return generateKnuthGaps(n);
+            }
+        }
+
+        // ========== SHELL SORT ALGORITHM ==========
+        function generateShellSortSteps(arr) {
+            steps = [];
+            const n = arr.length;
+            let tempArray = [...arr];
+
+            steps.push({
+                type: 'highlight_code',
+                line: 1,
+                explanation: '<strong>Khởi tạo:</strong> Bắt đầu thuật toán Shell Sort với mảng đầu vào.'
+            });
+            steps.push({
+                type: 'highlight_code',
+                line: 2,
+                explanation: '<strong>Đo độ dài:</strong> Xác định kích thước n của mảng để tính gap.'
+            });
+
+            const sequenceNames = {
+                'shell': 'Shell Original (n/2)',
+                'hibbard': 'Hibbard (2^k - 1)',
+                'knuth': 'Knuth (3^k - 1)/2',
+                'ciura': 'Ciura (Optimal)'
+            };
+
+            steps.push({
+                type: 'highlight_code',
+                line: 5,
+                explanation: `<strong>Tính gap:</strong> Sẽ tính gap sequence theo dãy ${sequenceNames[currentGapSequence]}.`
+            });
+            const gaps = getGapSequence(n);
+
+            steps.push({
+                type: 'highlight_code',
+                line: 6,
+                explanation: `<strong>Gap ban đầu:</strong> Tìm gap lớn nhất theo dãy Knuth: ${gaps.join(', ')}.`
+            });
+            steps.push({
+                type: 'highlight_code',
+                line: 7,
+                explanation: '<strong>Vòng lặp gap:</strong> Tăng gap cho đến khi vượt quá n/3.'
+            });
+
+            steps.push({
+                type: 'highlight_code',
+                line: 10,
+                explanation: '<strong>Bắt đầu sắp xếp:</strong> Bắt đầu vòng lặp với gap giảm dần từ lớn đến nhỏ.'
+            });
+
+            for (let gap of gaps) {
+                steps.push({
+                    type: 'set_gap',
+                    gap: gap,
+                    explanation: `<strong>Gap = ${gap}:</strong> Chia mảng thành các nhóm con cách nhau ${gap} vị trí. Sẽ sắp xếp từng nhóm con bằng Insertion Sort.`
+                });
+                steps.push({
+                    type: 'highlight_code',
+                    line: 11,
+                    explanation: `<strong>Vòng for:</strong> Duyệt từ vị trí ${gap} đến ${n - 1} để sắp xếp các phần tử với gap = ${gap}.`
+                });
+
+                for (let i = gap; i < n; i++) {
+                    steps.push({
+                        type: 'highlight_code',
+                        line: 12,
+                        explanation: `<strong>Chọn temp:</strong> Lấy phần tử tại vị trí i = ${i}, giá trị = ${tempArray[i]}.`
+                    });
+                    const temp = tempArray[i];
+                    steps.push({
+                        type: 'mark_pivot',
+                        index: i,
+                        explanation: `<strong>Đánh dấu:</strong> temp = array[${i}] = ${temp}. Đây là phần tử cần tìm vị trí đúng trong nhóm con có gap = ${gap}.`
+                    });
+
+                    steps.push({
+                        type: 'highlight_code',
+                        line: 13,
+                        explanation: `<strong>Khởi tạo j:</strong> j = i = ${i}, sẽ dùng j để dịch chuyển ngược về trái.`
+                    });
+                    let j = i;
+
+                    steps.push({
+                        type: 'highlight_code',
+                        line: 15,
+                        explanation: `<strong>While loop:</strong> So sánh temp (${temp}) với các phần tử cách ${gap} vị trí về bên trái.`
+                    });
+
+                    while (j >= gap && tempArray[j - gap] > temp) {
+                        steps.push({
+                            type: 'compare',
+                            i: j,
+                            j: j - gap,
+                            explanation: `<strong>So sánh:</strong> array[${j - gap}] = ${tempArray[j - gap]} > temp (${temp})? ➜ <strong>Đúng</strong>. Cần dịch chuyển.`
+                        });
+                        steps.push({
+                            type: 'highlight_code',
+                            line: 16,
+                            explanation: `<strong>Dịch chuyển:</strong> Di chuyển array[${j - gap}] = ${tempArray[j - gap]} sang vị trí ${j}.`
+                        });
+
+                        tempArray[j] = tempArray[j - gap];
+                        steps.push({
+                            type: 'swap',
+                            from: j - gap,
+                            to: j,
+                            explanation: `<strong>Thực hiện:</strong> array[${j}] = array[${j - gap}] = ${tempArray[j]}. Đã hoán đổi xong.`
+                        });
+
+                        steps.push({
+                            type: 'highlight_code',
+                            line: 17,
+                            explanation: `<strong>Giảm j:</strong> j = j - gap = ${j} - ${gap} = ${j - gap}. Tiếp tục kiểm tra phần tử tiếp theo.`
+                        });
+                        j -= gap;
+
+                        if (j >= gap) {
+                            steps.push({
+                                type: 'highlight_code',
+                                line: 15,
+                                explanation: `<strong>Lặp lại:</strong> Tiếp tục so sánh với phần tử tiếp theo (j = ${j}).`
+                            });
+                        }
+                    }
+
+                    if (j >= gap) {
+                        steps.push({
+                            type: 'compare',
+                            i: j,
+                            j: j - gap,
+                            explanation: `<strong>So sánh:</strong> array[${j - gap}] = ${tempArray[j - gap]} > temp (${temp})? ➜ <strong>Sai</strong>. Dừng vòng lặp.`
+                        });
+                    }
+
+                    steps.push({
+                        type: 'highlight_code',
+                        line: 19,
+                        explanation: `<strong>Chèn temp:</strong> Đặt temp (${temp}) vào vị trí j = ${j}. Phần tử đã về đúng vị trí trong nhóm con.`
+                    });
+                    tempArray[j] = temp;
+                    steps.push({
+                        type: 'set',
+                        index: j,
+                        value: temp,
+                        explanation: `<strong>Hoàn tất:</strong> array[${j}] = ${temp}. Phần tử này đã sắp xếp xong với gap = ${gap}.`
+                    });
+                    steps.push({
+                        type: 'sorted_temp',
+                        index: j,
+                        explanation: `<strong>Flash xanh:</strong> Đánh dấu vị trí ${j} đã được sắp xếp tạm thời với gap hiện tại.`
+                    });
+                }
+
+                steps.push({
+                    type: 'highlight_code',
+                    line: 21,
+                    explanation: `<strong>Giảm gap:</strong> gap = (${gap} - 1) / 3 = ${Math.floor((gap - 1) / 3)}. Chuyển sang gap nhỏ hơn để tinh chỉnh.`
+                });
+            }
+
+            steps.push({
+                type: 'highlight_code',
+                line: 23,
+                explanation: '<strong>Trả về kết quả:</strong> Tất cả các gap đã xử lý xong. Mảng đã được sắp xếp hoàn toàn.'
+            });
+            steps.push({
+                type: 'complete',
+                explanation: '<strong>🎉 Hoàn thành!</strong> Shell Sort đã sắp xếp mảng thành công. Mảng cuối cùng: [' + tempArray.join(', ') + '].'
+            });
+
+            return tempArray;
+        }
+
+        // ========== PLAY ANIMATION ==========
+        async function playAnimation() {
+            for (let step of steps) {
+                if (!isRunning) break;
+
+                // Pause logic
+                while (isPaused) {
+                    await sleep(100);
+                    if (!isRunning) break;
+                }
+
+                if (!isRunning) break;
+
+                stepCount++;
+                updateDisplay();
+
+                // Update explanation box
+                if (step.explanation) {
+                    explanationBox.innerHTML = step.explanation;
+                }
+
+                switch (step.type) {
+                    case 'highlight_code':
+                        highlightLine(step.line);
+                        await sleep(animationSpeed * 0.15);
+                        break;
+
+                    case 'set_gap':
+                        currentGapDisplay.textContent = step.gap;
+                        gapValue.textContent = step.gap;
+                        gapIndicator.style.display = 'block';
+                        statusMsg.textContent = `Bắt đầu với Gap = ${step.gap}`;
+                        await sleep(animationSpeed * 0.5);
+                        break;
+
+                    case 'mark_pivot':
+                        setBarState(step.index, 'pivot');
+                        await sleep(animationSpeed * 0.3);
+                        break;
+
+                    case 'compare':
+                        await animateCompare(step.i, step.j);
+                        clearBarStates();
+                        break;
+
+                    case 'swap':
+                        await animateSwap(step.from, step.to);
+                        break;
+
+                    case 'set':
+                        await animateSet(step.index, step.value);
+                        break;
+
+                    case 'sorted_temp':
+                        await animateSorted(step.index);
+                        break;
+
+                    case 'complete':
+                        clearHighlight();
+                        gapIndicator.style.display = 'none';
+                        statusMsg.textContent = '✅ Hoàn thành! Mảng đã được sắp xếp';
+                        await showAllSorted();
+                        break;
+                }
+            }
+
+            isRunning = false;
+            isPaused = false;
+            pauseBtn.style.display = 'none';
+            enableControls();
+        }
+
+        // ========== BUTTON HANDLERS ==========
+        sortBtn.addEventListener('click', async () => {
+            if (isRunning) return;
+
+            isRunning = true;
+            isPaused = false;
+            disableControls();
+
+            // Hiển thị nút pause
+            pauseBtn.style.display = 'inline-block';
+            pauseBtn.textContent = '⏸ Tạm dừng';
+            pauseBtn.classList.remove('resumed');
+
+            parseArray();
+            // Chuyển đổi từ giây sang milliseconds
+            animationSpeed = parseFloat(speedInput.value) * 1000;
+            renderBars();
+
+            statusMsg.textContent = '⏳ Đang phân tích thuật toán...';
+            explanationBox.innerHTML = '<strong>Đang chuẩn bị:</strong> Phân tích mảng và tạo các bước sắp xếp...';
+            await sleep(300);
+
+            generateShellSortSteps(array);
+
+            const sequenceNames = {
+                'shell': 'Shell Original',
+                'hibbard': 'Hibbard',
+                'knuth': 'Knuth',
+                'ciura': 'Ciura'
+            };
+            statusMsg.textContent = `▶ Bắt đầu sắp xếp với Shell Sort (${sequenceNames[currentGapSequence]} Sequence)...`;
+            explanationBox.innerHTML = `<strong>Bắt đầu:</strong> Shell Sort sử dụng dãy ${sequenceNames[currentGapSequence]}. Theo dõi mã giả bên phải để hiểu từng bước.`;
+            await sleep(500);
+
+            await playAnimation();
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            if (!isRunning) return;
+
+            isPaused = !isPaused;
+
+            if (isPaused) {
+                pauseBtn.textContent = '▶ Tiếp tục';
+                pauseBtn.classList.add('resumed');
+                statusMsg.textContent = '⏸ Đã tạm dừng';
+                explanationBox.innerHTML = '<strong>Tạm dừng:</strong> Nhấn "▶ Tiếp tục" để chạy tiếp.';
+            } else {
+                pauseBtn.textContent = '⏸ Tạm dừng';
+                pauseBtn.classList.remove('resumed');
+                statusMsg.textContent = '▶ Đang tiếp tục...';
+            }
+        });
+
+        randomBtn.addEventListener('click', () => {
+            const size = 7 + Math.floor(Math.random() * 6);
+            const randomArray = [];
+            for (let i = 0; i < size; i++) {
+                randomArray.push(Math.floor(Math.random() * 90) + 10);
+            }
+            arrayInput.value = randomArray.join(',');
+            parseArray();
+            renderBars();
+            clearHighlight();
+            gapIndicator.style.display = 'none';
+            statusMsg.textContent = '🎲 Đã tạo mảng ngẫu nhiên';
+            explanationBox.textContent = 'Đã tạo mảng ngẫu nhiên. Nhấn "Sắp xếp" để xem chi tiết từng bước.';
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (isRunning) {
+                isRunning = false;
+            }
+            isPaused = false;
+            pauseBtn.style.display = 'none';
+
+            array = [...originalArray];
+            arrayInput.value = originalArray.join(',');
+            resetCounters();
+            renderBars();
+            clearHighlight();
+            gapIndicator.style.display = 'none';
+            statusMsg.textContent = '🔄 Đã reset về mảng ban đầu';
+            explanationBox.textContent = 'Đã reset về mảng ban đầu. Nhấn "Sắp xếp" để bắt đầu lại.';
+            enableControls();
+        });
+
+        // Gap Sequence Change Handler
+        gapSequenceSelect.addEventListener('change', () => {
+            // update pseudocode header and rerender pseudocode for new sequence
+            updatePseudocodeHeader?.();
+            renderPseudocode?.();
+            if (isRunning) return; // Don't allow changing during animation
+
+            currentGapSequence = gapSequenceSelect.value;
+            renderPseudocode();
+            statusMsg.textContent = `✨ Đã chuyển sang dãy ${gapSequenceSelect.options[gapSequenceSelect.selectedIndex].text}`;
+            explanationBox.textContent = `Bạn đã chọn gap sequence: ${gapSequenceSelect.options[gapSequenceSelect.selectedIndex].text}. Nhấn "Sắp xếp" để xem cách thức hoạt động.`;
+        });
+
+        function disableControls() {
+            sortBtn.disabled = true;
+            randomBtn.disabled = true;
+            arrayInput.disabled = true;
+            speedInput.disabled = true;
+            gapSequenceSelect.disabled = true;
+        }
+
+        function enableControls() {
+            sortBtn.disabled = false;
+            randomBtn.disabled = false;
+            arrayInput.disabled = false;
+            speedInput.disabled = false;
+            gapSequenceSelect.disabled = false;
+        }
+
+        // ========== RESPONSIVE ==========
+        window.addEventListener('resize', () => {
+            if (!isRunning) {
+                renderBars();
+            }
+        });
+
+        // ========== START ==========
+        init();
+
+        // ========== 3D BACKGROUND INITIALIZATION ==========
+        (function init3DBackground() {
+            const canvas = document.getElementById('bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            camera.position.z = 50;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight1 = new THREE.PointLight(0x007ACC, 1, 100);
+            pointLight1.position.set(10, 10, 10);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0x4ec9b0, 0.8, 100);
+            pointLight2.position.set(-10, -10, 10);
+            scene.add(pointLight2);
+
+            // Create 3D objects array
+            const objects = [];
+
+            // Highlight shape: TorusKnot (option 1)
+            const torusKnotGeom = new THREE.TorusKnotGeometry(3, 0.8, 220, 32, 2, 3);
+            const torusKnotMat = new THREE.MeshPhysicalMaterial({
+                color: 0x4ec9b0,
+                metalness: 0.2,
+                roughness: 0.4,
+                transparent: true,
+                opacity: 0.9,
+                emissive: 0x0a2f2a,
+                emissiveIntensity: 0.2,
+                clearcoat: 0.3,
+                reflectivity: 0.4
+            });
+            const torusKnot = new THREE.Mesh(torusKnotGeom, torusKnotMat);
+            torusKnot.position.set(0, 0, -10);
+            torusKnot.rotation.x = Math.PI * 0.25;
+            torusKnot.rotation.y = Math.PI * 0.1;
+            torusKnot.userData = { rotationSpeed: { x: 0.004, y: 0.006, z: 0.0 }, floatSpeed: 0.0, floatOffset: 0 };
+            scene.add(torusKnot);
+            objects.push(torusKnot);
+
+            // Function to create text geometry (code symbols)
+            function createCodeSymbol(text, color) {
+                const geometry = new THREE.TorusGeometry(1, 0.3, 16, 100);
+                const material = new THREE.MeshPhongMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.7,
+                    emissive: color,
+                    emissiveIntensity: 0.2
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                return mesh;
+            }
+
+            // Function to create geometric shapes
+            function createGeometricShape(type, color) {
+                let geometry;
+                switch (type) {
+                    case 'box':
+                        geometry = new THREE.BoxGeometry(2, 2, 2);
+                        break;
+                    case 'sphere':
+                        geometry = new THREE.SphereGeometry(1, 32, 32);
+                        break;
+                    case 'cone':
+                        geometry = new THREE.ConeGeometry(1, 2, 32);
+                        break;
+                    case 'torus':
+                        geometry = new THREE.TorusGeometry(1.5, 0.5, 16, 100);
+                        break;
+                    case 'octahedron':
+                        geometry = new THREE.OctahedronGeometry(1.5);
+                        break;
+                    default:
+                        geometry = new THREE.TetrahedronGeometry(1.5);
+                }
+
+                const material = new THREE.MeshPhongMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.6,
+                    wireframe: Math.random() > 0.5,
+                    emissive: color,
+                    emissiveIntensity: 0.1
+                });
+
+                return new THREE.Mesh(geometry, material);
+            }
+
+            // Colors palette
+            const colors = [0x007ACC, 0x4ec9b0, 0xc586c0, 0x9cdcfe, 0xb5cea8, 0xdcdcaa];
+            const shapes = ['box', 'sphere', 'cone', 'torus', 'octahedron', 'tetrahedron'];
+
+            // Create floating objects
+            for (let i = 0; i < 50; i++) {
+                const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const mesh = createGeometricShape(shapeType, color);
+
+                // Random position
+                mesh.position.x = (Math.random() - 0.5) * 100;
+                mesh.position.y = (Math.random() - 0.5) * 100;
+                mesh.position.z = (Math.random() - 0.5) * 100;
+
+                // Random rotation
+                mesh.rotation.x = Math.random() * Math.PI;
+                mesh.rotation.y = Math.random() * Math.PI;
+
+                // Random scale
+                const scale = Math.random() * 0.5 + 0.5;
+                mesh.scale.set(scale, scale, scale);
+
+                // Store animation data
+                mesh.userData = {
+                    rotationSpeed: {
+                        x: (Math.random() - 0.5) * 0.02,
+                        y: (Math.random() - 0.5) * 0.02,
+                        z: (Math.random() - 0.5) * 0.02
+                    },
+                    floatSpeed: Math.random() * 0.02 + 0.01,
+                    floatOffset: Math.random() * Math.PI * 2
+                };
+
+                objects.push(mesh);
+                scene.add(mesh);
+            }
+
+            // Add particles
+            const particleGeometry = new THREE.BufferGeometry();
+            const particleCount = 200;
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 150;
+                positions[i + 1] = (Math.random() - 0.5) * 150;
+                positions[i + 2] = (Math.random() - 0.5) * 150;
+            }
+
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0x4ec9b0,
+                size: 0.3,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            const particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            // Wave plane background (option 3)
+            const waveWidth = 160, waveHeight = 160, seg = 80;
+            const planeGeom = new THREE.PlaneGeometry(waveWidth, waveHeight, seg, seg);
+            planeGeom.rotateX(-Math.PI / 2);
+            const planeMat = new THREE.MeshLambertMaterial({ color: 0x007ACC, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+            const wavePlane = new THREE.Mesh(planeGeom, planeMat);
+            wavePlane.position.y = -12;
+            scene.add(wavePlane);
+            const planeBasePos = planeGeom.attributes.position.array.slice();
+            const wave = { amp: 2.2, freqX: 0.08, freqY: 0.06, speed: 0.8 };
+
+            // Animation loop
+            let time = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.01;
+
+                // Pulse the TorusKnot subtly
+                if (torusKnot) {
+                    const s = 1 + Math.sin(time * 1.2) * 0.03;
+                    torusKnot.scale.set(s, s, s);
+                }
+
+                // Update wave plane vertices
+                if (planeGeom) {
+                    const pos = planeGeom.attributes.position;
+                    const arr = pos.array;
+                    for (let i = 0; i < arr.length; i += 3) {
+                        const x = planeBasePos[i + 0];
+                        const y = planeBasePos[i + 2]; // because of rotationX, z becomes y in world
+                        arr[i + 1] = Math.sin(x * wave.freqX + time * wave.speed) * wave.amp
+                            + Math.cos(y * wave.freqY + time * wave.speed * 0.9) * (wave.amp * 0.6);
+                    }
+                    pos.needsUpdate = true;
+                    // Optional: recompute normals occasionally for better lighting
+                    if ((Math.floor(time * 10) % 10) === 0) planeGeom.computeVertexNormals();
+                }
+
+                // Animate objects
+                objects.forEach((obj, index) => {
+                    // Rotation
+                    obj.rotation.x += obj.userData.rotationSpeed.x;
+                    obj.rotation.y += obj.userData.rotationSpeed.y;
+                    obj.rotation.z += obj.userData.rotationSpeed.z;
+
+                    // Float animation
+                    obj.position.y += Math.sin(time + obj.userData.floatOffset) * obj.userData.floatSpeed;
+                });
+
+                // Animate particles
+                particles.rotation.y += 0.0005;
+                particles.rotation.x += 0.0002;
+
+                // Slowly rotate camera
+                camera.position.x = Math.sin(time * 0.1) * 5;
+                camera.position.y = Math.cos(time * 0.15) * 3;
+                camera.lookAt(scene.position);
+
+                renderer.render(scene, camera);
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            animate();
+        })();
+
+        // Mobile optimizations + Theme toggle
+        (function mobileAndTheme() {
+            const root = document.documentElement;
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const THEME_KEY = 'ssv_theme';
+            const saved = localStorage.getItem(THEME_KEY);
+
+            // Theme tokens
+            const themes = {
+                dark: {
+                    '--ui-surface': 'rgba(30,30,30,0.72)',
+                    '--ui-surface-strong': 'rgba(22,22,22,0.92)',
+                    '--ui-stroke': 'rgba(255,255,255,0.06)',
+                    '--text': '#e6e6e6',
+                    '--muted': '#a0a0a0',
+                    '--primary': '#4ec9b0',
+                    '--primary-strong': '#2fb79e',
+                    '--accent': '#007ACC'
+                },
+                dim: {
+                    '--ui-surface': 'rgba(40,40,40,0.7)',
+                    '--ui-surface-strong': 'rgba(30,30,30,0.86)',
+                    '--ui-stroke': 'rgba(255,255,255,0.06)',
+                    '--text': '#f2f2f2',
+                    '--muted': '#bcbcbc',
+                    '--primary': '#70d5c3',
+                    '--primary-strong': '#4fc7b2',
+                    '--accent': '#25a0ff'
+                },
+                light: {
+                    '--ui-surface': 'rgba(255,255,255,0.72)',
+                    '--ui-surface-strong': 'rgba(255,255,255,0.92)',
+                    '--ui-stroke': 'rgba(0,0,0,0.06)',
+                    '--text': '#17202a',
+                    '--muted': '#4f5b66',
+                    '--primary': '#0aa6a6',
+                    '--primary-strong': '#088f8f',
+                    '--accent': '#006ad4'
+                }
+            };
+
+            function applyTheme(name) {
+                const token = themes[name];
+                if (!token) return;
+                for (const k in token) root.style.setProperty(k, token[k]);
+                document.body.dataset.theme = name;
+                localStorage.setItem(THEME_KEY, name);
+                // also tint bg-canvas gradient for light theme
+                const bg = document.getElementById('bg-canvas');
+                if (bg) {
+                    if (name === 'light') bg.style.background = 'linear-gradient(135deg, #e9f2ff 0%, #f7fbff 50%, #eef6ff 100%)';
+                    else bg.style.background = 'linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%)';
+                }
+            }
+
+            // Initialize theme
+            applyTheme(saved || (prefersDark ? 'dark' : 'dim'));
+
+            // Toggle handler cycles dim -> dark -> light
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            toggleBtn?.addEventListener('click', () => {
+                const order = ['dim', 'dark', 'light'];
+                const cur = document.body.dataset.theme || 'dim';
+                const next = order[(order.indexOf(cur) + 1) % order.length];
+                applyTheme(next);
+            });
+
+            // Mobile specific tweaks
+            const mqSmall = window.matchMedia('(max-width: 768px)');
+            function tuneForMobile() {
+                const small = mqSmall.matches;
+                const container = document.querySelector('.container');
+                if (container) container.style.padding = small ? '12px' : '20px';
+                document.querySelectorAll('.controls .input-group').forEach(g => g.style.width = '100%');
+                document.querySelectorAll('button, .btn').forEach(b => b.style.minHeight = small ? '44px' : '36px');
+                const nav = document.querySelector('nav ul');
+                if (nav) { nav.style.flexDirection = small ? 'column' : 'row'; nav.style.gap = small ? '8px' : '1rem'; }
+            }
+            tuneForMobile();
+            mqSmall.addEventListener?.('change', tuneForMobile);
+
+            // Improve touch hit area and passive listeners
+            document.addEventListener('touchstart', function () { }, { passive: true });
+        })();
+    </script>
+</body>
+
+</html>
