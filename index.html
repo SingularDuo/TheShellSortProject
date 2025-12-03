@@ -252,6 +252,14 @@
             transition: all 0.3s ease;
             border-radius: 4px;
         }
+        .code-line.empty {
+            height: 0;
+            padding: 0;
+            margin: 0;
+            line-height: 0;
+            border: 0;
+            visibility: hidden;
+        }
 
         .code-line.highlight {
             background: #264f78;
@@ -262,25 +270,50 @@
         }
 
         .keyword {
+            /* VS Code Dark+ - Keyword */
             color: #c586c0;
-            font-weight: bold;
+            font-weight: 600;
         }
 
         .variable {
+            /* VS Code Dark+ - Variable/identifier */
             color: #9cdcfe;
         }
 
         .operator {
+            /* VS Code Dark+ - Operator */
             color: #d4d4d4;
         }
 
         .number {
+            /* VS Code Dark+ - Number */
             color: #b5cea8;
         }
 
         .comment {
+            /* VS Code Dark+ - Comment */
             color: #6a9955;
             font-style: italic;
+        }
+
+        .string {
+            /* VS Code Dark+ - String */
+            color: #ce9178;
+        }
+
+        .function {
+            /* VS Code Dark+ - Function name */
+            color: #dcdcaa;
+        }
+
+        .type {
+            /* VS Code Dark+ - Type/struct/class */
+            color: #4ec9b0;
+        }
+
+        .constant {
+            /* VS Code Dark+ - Constant */
+            color: #4fc1ff;
         }
 
         .controls {
@@ -808,6 +841,30 @@
                 transition: none !important;
             }
         }
+        /* Fullscreen mode for visualizer */
+        #visualizer.fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 2000;
+            /* Scale the whole visualizer while keeping layout aligned from top-left */
+            --fs-scale: 1.4;
+            width: calc(100vw / var(--fs-scale));
+            height: calc(100vh / var(--fs-scale));
+            transform: scale(var(--fs-scale));
+            transform-origin: top left;
+            margin: 0 !important;
+            overflow: auto;
+        }
+
+        /* Make sure our new button matches others */
+        #fullscreenBtn {
+            background: #0e639c;
+            color: white;
+        }
+        #fullscreenBtn:hover {
+            background: #1177bb;
+        }
     </style>
 </head>
 
@@ -875,6 +932,7 @@
                     <button id="pauseBtn" style="display: none;">⏸ Tạm dừng</button>
                     <button id="randomBtn">🎲 Ngẫu nhiên</button>
                     <button id="resetBtn">🔄 Reset</button>
+                    <button id="fullscreenBtn">⛶ Phóng to</button>
                 </div>
 
                 <div class="info-panel">
@@ -1126,6 +1184,76 @@ end procedure</pre>
             </table>
         </section>
 
+        <!-- Syntax highlight for code samples (VS Code Dark+) -->
+        <script>
+            (function codeSampleHighlight() {
+                const VS = {
+                    keyword: '#c586c0', string: '#ce9178', number: '#b5cea8', comment: '#6a9955',
+                    func: '#dcdcaa', type: '#4ec9b0', variable: '#9cdcfe', operator: '#d4d4d4', constant: '#4fc1ff',
+                    text: '#d4d4d4'
+                };
+                function wrap(text, cls) { return `<span class="${cls}">${text}</span>`; }
+                function escapeHtml(s) {
+                    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                }
+                function highlight(code, lang) {
+                    const src = escapeHtml(code);
+                    if (lang === 'cpp' || lang === 'java') {
+                        let s = src;
+                        // comments
+                        s = s.replace(/\/\/.*$/gm, m => wrap(m, 'comment'));
+                        s = s.replace(/\/\*[\s\S]*?\*\//g, m => wrap(m, 'comment'));
+                        // strings
+                        s = s.replace(/"([^"\\]|\\.)*"/g, m => wrap(m, 'string'));
+                        s = s.replace(/'([^'\\]|\\.)*'/g, m => wrap(m, 'string'));
+                        // numbers
+                        s = s.replace(/\b(0x[0-9a-fA-F]+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/g, m => wrap(m, 'number'));
+                        // keywords (subset)
+                        const kw = /(class|public|private|protected|static|void|int|float|double|long|short|char|bool|boolean|new|return|if|else|for|while|do|switch|case|break|continue|typedef|using|namespace|include|std|const|this)\b/g;
+                        s = s.replace(kw, m => wrap(m, 'keyword'));
+                        // types and std identifiers
+                        s = s.replace(/\b(std::)?(vector|string|map|set|List|Array|HashMap)\b/g, m => wrap(m, 'type'));
+                        // functions (heuristic: word before '(' that isn't keyword)
+                        s = s.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, (m, g1) => `<span class="function">${g1}</span>`);
+                        return s;
+                    }
+                    if (lang === 'javascript') {
+                        let s = src;
+                        s = s.replace(/\/\/.*$/gm, m => wrap(m, 'comment'));
+                        s = s.replace(/\/\*[\s\S]*?\*\//g, m => wrap(m, 'comment'));
+                        s = s.replace(/`[^`\\]*(?:\\.[^`\\]*)*`/g, m => wrap(m, 'string'));
+                        s = s.replace(/"([^"\\]|\\.)*"| '([^'\\]|\\.)*'/g, m => wrap(m, 'string'));
+                        s = s.replace(/\b(0x[0-9a-fA-F]+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\b/g, m => wrap(m, 'number'));
+                        const kw = /(function|const|let|var|return|if|else|for|while|do|switch|case|break|continue|new|class|extends|super|this|typeof|instanceof|in|of|try|catch|finally|throw|import|from|export|default)\b/g;
+                        s = s.replace(kw, m => wrap(m, 'keyword'));
+                        s = s.replace(/\b(Array|Object|Map|Set|Number|String|Boolean|Math|Date|Promise)\b/g, m => wrap(m, 'type'));
+                        s = s.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, (m, g1) => `<span class="function">${g1}</span>`);
+                        return s;
+                    }
+                    if (lang === 'python') {
+                        let s = src;
+                        s = s.replace(/#.*/g, m => wrap(m, 'comment'));
+                        s = s.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"([^"\\]|\\.)*"|'([^'\\]|\\.)*')/g, m => wrap(m, 'string'));
+                        s = s.replace(/\b(0x[0-9a-fA-F]+|\d+(?:\.\d+)?)\b/g, m => wrap(m, 'number'));
+                        const kw = /(def|class|return|if|elif|else|for|while|try|except|finally|with|as|lambda|import|from|pass|break|continue|in|is|and|or|not|None|True|False)\b/g;
+                        s = s.replace(kw, m => wrap(m, 'keyword'));
+                        s = s.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, (m, g1) => `<span class="function">${g1}</span>`);
+                        return s;
+                    }
+                    return src;
+                }
+                function run() {
+                    document.querySelectorAll('pre.code-sample').forEach(pre => {
+                        const lang = pre.dataset.lang;
+                        const code = pre.textContent;
+                        pre.innerHTML = highlight(code, lang);
+                    });
+                }
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+                else run();
+            })();
+        </script>
+
         <!-- SECTION: CODE MẪU -->
         <section id="code">
             <h2>💻 Code mẫu Shell Sort</h2>
@@ -1133,7 +1261,7 @@ end procedure</pre>
             <h3>C++</h3>
             <div
                 style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto;">
-                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">#include &lt;iostream&gt;
+                <pre class="code-sample" data-lang="cpp" style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">#include &lt;iostream&gt;
 #include &lt;vector&gt;
 using namespace std;
 
@@ -1178,7 +1306,7 @@ int main() {
             <h3>Python</h3>
             <div
                 style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto; margin-top: 1.5rem;">
-                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">def shell_sort(arr):
+                <pre class="code-sample" data-lang="python" style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">def shell_sort(arr):
     n = len(arr)
     gap = n // 2
 
@@ -1210,7 +1338,7 @@ print("Mảng sau khi sắp xếp:", arr)</pre>
             <h3>JavaScript</h3>
             <div
                 style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto; margin-top: 1.5rem;">
-                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">function shellSort(arr) {
+                <pre class="code-sample" data-lang="javascript" style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">function shellSort(arr) {
     const n = arr.length;
     let gap = Math.floor(n / 2);
 
@@ -1246,7 +1374,7 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             <h3>Java</h3>
             <div
                 style="background-color: #1e1e1e; padding: 1.5rem; border-radius: 5px; border: 1px solid #333; overflow-x: auto; margin-top: 1.5rem;">
-                <pre style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">public class ShellSort {
+                <pre class="code-sample" data-lang="java" style="margin: 0; color: #d4d4d4; font-family: 'Consolas', monospace;">public class ShellSort {
     public static void shellSort(int[] arr) {
         int n = arr.length;
 
@@ -1460,26 +1588,18 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Shell Original (n/2)</span>',
             '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
             '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
-            '    ',
             '    <span class="comment">// Khởi tạo gap = n/2</span>',
             '    <span class="variable">gap</span> <span class="operator">=</span> <span class="variable">n</span> <span class="operator">/</span> <span class="number">2</span>',
-            '    ',
-            '    ',
-            '    ',
             '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
             '    <span class="keyword">while</span> <span class="variable">gap</span> <span class="operator">&gt;</span> <span class="number">0</span>:',
             '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
             '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
             '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
-            '            ',
             '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
             '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
             '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
-            '            ',
             '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
-            '        ',
             '        <span class="variable">gap</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="operator">/</span> <span class="number">2</span>',
-            '    ',
             '    <span class="keyword">return</span> <span class="variable">array</span>'
         ];
 
@@ -1487,27 +1607,21 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Hibbard (2^k - 1)</span>',
             '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
             '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
-            '    ',
             '    <span class="comment">// Tính dãy gap Hibbard: 1, 3, 7, 15, 31, ...</span>',
             '    <span class="variable">k</span> <span class="operator">=</span> <span class="number">1</span>',
             '    <span class="keyword">while</span> <span class="number">2</span><span class="operator">^</span><span class="variable">k</span> <span class="operator">-</span> <span class="number">1</span> <span class="operator">&lt;</span> <span class="variable">n</span>:',
             '        <span class="variable">k</span> <span class="operator">=</span> <span class="variable">k</span> <span class="operator">+</span> <span class="number">1</span>',
-            '    ',
             '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
             '    <span class="keyword">while</span> <span class="variable">k</span> <span class="operator">&gt;</span> <span class="number">0</span>:',
             '        <span class="variable">gap</span> <span class="operator">=</span> <span class="number">2</span><span class="operator">^</span><span class="variable">k</span> <span class="operator">-</span> <span class="number">1</span>',
             '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
             '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
             '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
-            '            ',
             '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
             '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
             '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
-            '            ',
             '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
-            '        ',
             '        <span class="variable">k</span> <span class="operator">=</span> <span class="variable">k</span> <span class="operator">-</span> <span class="number">1</span>',
-            '    ',
             '    <span class="keyword">return</span> <span class="variable">array</span>'
         ];
 
@@ -1515,26 +1629,20 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Knuth (3^k - 1) / 2</span>',
             '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
             '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
-            '    ',
             '    <span class="comment">// Tính khoảng cách Knuth lớn nhất &lt;= n</span>',
             '    <span class="variable">gap</span> <span class="operator">=</span> <span class="number">1</span>',
             '    <span class="keyword">while</span> <span class="variable">gap</span> <span class="operator">&lt;</span> <span class="variable">n</span> <span class="operator">/</span> <span class="number">3</span>:',
             '        <span class="variable">gap</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="operator">*</span> <span class="number">3</span> <span class="operator">+</span> <span class="number">1</span>',
-            '    ',
             '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
             '    <span class="keyword">while</span> <span class="variable">gap</span> <span class="operator">&gt;</span> <span class="number">0</span>:',
             '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
             '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
             '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
-            '            ',
             '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
             '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
             '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
-            '            ',
             '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
-            '        ',
             '        <span class="variable">gap</span> <span class="operator">=</span> (<span class="variable">gap</span> <span class="operator">-</span> <span class="number">1</span>) <span class="operator">/</span> <span class="number">3</span>',
-            '    ',
             '    <span class="keyword">return</span> <span class="variable">array</span>'
         ];
 
@@ -1542,26 +1650,18 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             '<span class="comment">// Sắp xếp Shell Sort sử dụng dãy Ciura (Optimal)</span>',
             '<span class="keyword">function</span> <span class="variable">shellSort</span>(<span class="variable">array</span>):',
             '    <span class="variable">n</span> <span class="operator">=</span> <span class="variable">array</span>.<span class="variable">length</span>',
-            '    ',
             '    <span class="comment">// Dãy Ciura: 1, 4, 10, 23, 57, 132, 301, 701, ...</span>',
             '    <span class="variable">ciura</span> <span class="operator">=</span> [<span class="number">1</span>, <span class="number">4</span>, <span class="number">10</span>, <span class="number">23</span>, <span class="number">57</span>, <span class="number">132</span>, <span class="number">301</span>, <span class="number">701</span>, ...]',
             '    <span class="variable">gaps</span> <span class="operator">=</span> <span class="keyword">filter</span>(<span class="variable">ciura</span>, <span class="variable">g</span> <span class="operator">&lt;</span> <span class="variable">n</span>)',
-            '    ',
-            '    ',
             '    <span class="comment">// Bắt đầu sắp xếp với gap giảm dần</span>',
             '    <span class="keyword">for each</span> <span class="variable">gap</span> <span class="keyword">in</span> <span class="variable">gaps</span> (descending):',
             '        <span class="keyword">for</span> <span class="variable">i</span> <span class="operator">=</span> <span class="variable">gap</span> <span class="keyword">to</span> <span class="variable">n</span><span class="operator">-</span><span class="number">1</span>:',
             '            <span class="variable">temp</span> <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">i</span>]',
             '            <span class="variable">j</span> <span class="operator">=</span> <span class="variable">i</span>',
-            '            ',
             '            <span class="keyword">while</span> <span class="variable">j</span> <span class="operator">&gt;=</span> <span class="variable">gap</span> <span class="keyword">and</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>] <span class="operator">&gt;</span> <span class="variable">temp</span>:',
             '                <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">array</span>[<span class="variable">j</span><span class="operator">-</span><span class="variable">gap</span>]',
             '                <span class="variable">j</span> <span class="operator">=</span> <span class="variable">j</span> <span class="operator">-</span> <span class="variable">gap</span>',
-            '            ',
             '            <span class="variable">array</span>[<span class="variable">j</span>] <span class="operator">=</span> <span class="variable">temp</span>',
-            '        ',
-            '        ',
-            '    ',
             '    <span class="keyword">return</span> <span class="variable">array</span>'
         ];
 
@@ -1592,7 +1692,11 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
         function renderPseudocode() {
             pseudocodeLines = getPseudocode();
             pseudocodeElement.innerHTML = pseudocodeLines
-                .map((line, index) => `<div class="code-line" data-line="${index}">${line}</div>`)
+                .map((line, index) => {
+                    const isEmpty = /^\s*$/.test(line.replace(/<[^>]*>/g, ''));
+                    const cls = isEmpty ? 'code-line empty' : 'code-line';
+                    return `<div class="${cls}" data-line="${index}">${isEmpty ? '' : line}</div>`;
+                })
                 .join('');
             updatePseudocodeHeader();
         }
@@ -1648,9 +1752,11 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
         function parseArray() {
             const input = arrayInput.value.trim();
             array = input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+
             if (array.length === 0) {
                 array = [64, 34, 25, 12, 22, 11, 90];
             }
+
             originalArray = [...array];
             resetCounters();
         }
@@ -1814,10 +1920,12 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
         function generateShellGaps(n) {
             const gaps = [];
             let gap = Math.floor(n / 2);
+
             while (gap > 0) {
                 gaps.push(gap);
                 gap = Math.floor(gap / 2);
             }
+
             return gaps;
         }
 
@@ -1826,34 +1934,52 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             const gaps = [];
             let k = 1;
             let gap = Math.pow(2, k) - 1;
-            while (gap < n) { // Generate all gaps up to n
+
+            // Generate all gaps up to n
+            while (gap < n) {
                 gaps.push(gap);
                 k++;
                 gap = Math.pow(2, k) - 1;
             }
-            return gaps.reverse(); // Reverse to start with largest gap
+
+            // Reverse to start with largest gap
+            return gaps.reverse();
         }
 
         // Knuth: (3^k - 1)/2 (1, 4, 13, 40, 121, ...)
         function generateKnuthGaps(n) {
             const gaps = [];
             let gap = 1;
-            while (gap < n / 3) gap = gap * 3 + 1;
+
+            while (gap < n / 3) {
+                gap = gap * 3 + 1;
+            }
+
             while (gap > 0) {
                 gaps.push(gap);
                 gap = Math.floor((gap - 1) / 3);
             }
+
             return gaps;
         }
 
         // Ciura: Empirically optimal sequence
         function generateCiuraGaps(n) {
             const ciuraSequence = [1, 4, 10, 23, 57, 132, 301, 701, 1750, 3937, 8858, 19930, 44842, 100894, 227011, 510774, 1149241, 2585792, 5818032, 13090572, 29453787, 66271020, 149109795, 335497038, 754868335, 1698453253];
+
+            // Find gaps that are less than n
             const gaps = [];
             for (let i = ciuraSequence.length - 1; i >= 0; i--) {
-                if (ciuraSequence[i] < n) gaps.push(ciuraSequence[i]);
+                if (ciuraSequence[i] < n) {
+                    gaps.push(ciuraSequence[i]);
+                }
             }
-            if (gaps.length === 0) gaps.push(1);
+
+            // If no suitable gap found, start with largest available
+            if (gaps.length === 0) {
+                gaps.push(1);
+            }
+
             return gaps;
         }
 
@@ -2556,7 +2682,37 @@ console.log("Mảng sau khi sắp xếp:", arr);</pre>
             document.addEventListener('touchstart', function () { }, { passive: true });
         })();
     </script>
-</body>
+    <script>
+      // Fullscreen toggle for the visualizer section
+      (function(){
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const visualizerSection = document.getElementById('visualizer');
+        if (fullscreenBtn && visualizerSection) {
+          const updateButtonLabel = () => {
+            const isFull = visualizerSection.classList.contains('fullscreen-mode');
+            fullscreenBtn.textContent = isFull ? '🗗 Thu nhỏ' : '⛶ Phóng to';
+            fullscreenBtn.setAttribute('aria-pressed', String(isFull));
+            fullscreenBtn.setAttribute('title', isFull ? 'Thu nhỏ' : 'Phóng to');
+          };
 
+          fullscreenBtn.addEventListener('click', () => {
+            visualizerSection.classList.toggle('fullscreen-mode');
+            updateButtonLabel();
+          });
+
+          // Allow pressing Escape to exit fullscreen-mode
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && visualizerSection.classList.contains('fullscreen-mode')) {
+              visualizerSection.classList.remove('fullscreen-mode');
+              updateButtonLabel();
+            }
+          });
+
+          // Initialize correct label on load
+          updateButtonLabel();
+        }
+      })();
+    </script>
+  </body>
 
 </html>
